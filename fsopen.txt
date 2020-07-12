@@ -1,0 +1,105 @@
+
+Full Stack Open
+
+--------------------Part 0 Fundamentals of Web apps--------------------
+-F12 = opens Console
+-Preserve log = logs printed by the app as the page is reloaded
+-Disable cache in the Network tab
+-Status code 200 = successful request
+-Headers, Respons
+-Content-Type in Response Headers: text/html, charset=utf-8
+-browser uses information from the Content-Type to properly display web page
+-the HTML page begins to render before the image kuva.png has been fetched from the server
+-"dumb" browser = when all the logic behind the app is on the server and the browser just displays the results
+-web servers can be created with Express and Node.js
+-does an HTTP GET request to the server:
+xhttp.open('GET', '/data.json', true)
+-the notes list is populated from the .json file
+
+Event handlers and Callback functions
+--------------------
+xhttp.onreadystatechange = function () {..} = an event handler for event onreadystatechange is defined for the xhttp object doing the request
+-when the state of the object changes, the browser calls the event handler function, function()
+-readyState 4 of a XMLHttpRequest means "The operation is complete"
+-callback functions = event handler functions
+-the runtime environment, in our case the browser, invokes these functions at an appropriate time, when an event has occured
+
+Document Object Model or DOM
+--------------------
+-depicting HTML elements as a tree
+-DOM enables programmatic modification of these HTML elements
+-DOM is an API = application programming interface
+
+Manipulating the document-object from console
+--------------------
+-daca scrii document in consola, iti da acces la obiectul document care sta la radacina unui arbore DOM => document este un obiect
+-poti folosi consola sa adaugi continut elementelor originale din pagina, pur si simplu scrii cod in Console ca si cum ai scrie in VSC
+
+CSS
+--------------------
+-clasa incepe cu . in .css
+-id incepe cu # in .css
+
+Loading a page containing JavaScript - revised
+--------------------
+-dupa ce s-a incarcat fisierul data.json se invoca functia (event handler) care scrie in format HTML (cu <ul> si <li>) continutul "notes" folosind API-ul DOM
+
+Forms and HTTP POST
+--------------------
+-stilul vechi de a reflecta modificarile aduse in "notes" folosind redirect si un al doilea request GET catre server
+
+AJAX
+--------------------
+-AJAX = Asynchronous JavaScript and XML
+-AJAX e folosit pentru a incarca continutul paginii web prin cod JavaScript inclus in cod HTML, fara a re-randa (re-render) pagina
+
+Single page app
+--------------------
+-in single page app (SPA), exista o singura pagina HTML al carui continut este modificat de catre scriptul JavaScript incarcat de pe server si executat de catre browser
+-stil vechi: o noua intrare in "notes" se face la o pagina separata /new_note si se afiseaza continutul actualizat in urma unui redirect
+-pe stilul nou, nu se mai foloseste atributul "action" si "method" dintr-un element <form> => se face un singur request catre server
+-(https://httpstatuses.com/201) = status codes HTTP
+-se creeaza o functie callback care sa fie apelata cand se apasa pe butonul "Save"
+-prin...
+e.preventDefault()
+...se impiedica crearea unei al doilea GET request catre server
+
+JavaScript-libraries
+--------------------
+-JQuery
+-Angular, React + Redux, VueJS
+
+Full stack -web development
+--------------------
+-folosim JavaScript pe toate stivele front-end, back-end, database stack
+
+JavaScript fatigue
+--------------------
+-JavaScript technologies are being developed fast and can be hard and stressful to stay on top of new things that are emerging
+
+Exercises:
+--------------------
+-HTML: tag, attribute, attribute value and element
+-CSS: selector, property, property value and declaration
+-you have different types of selectors: element, ID, class, attribute
+margin: 0 auto; = marginea e 0 pe top si bottom si auto pe stanga si dreapta
+padding: 0 20px 20px 20px; = top, right, bottom, left
+-block element = element care ocupa spatiu in pagina, <body>...
+-inline element = element care nu poate primi atribute ca margin sau padding, <img>...
+-trebuie folosit display: block; pentru ca elementele inline sa se comporte ca un block
+-<form> e un container de elemente
+-se recomanda folosirea atributelor "action" si "method"
+-"action" = unde se trimit datele introduse in form
+-"method" = GET sau POST
+-folosind for se asociaza un label cu textbox-ul in care se introduc datele:
+<label for="mail">E-mail:</label>
+<input type="email" id="mail" name="user_email">
+-valoarea implicita pentru <input> se pune prin atributul "value", dar valoarea implicita pentru <textarea> se pune aici, in interior </textarea>
+-valorile din <form> sunt trimise catre server ca perechi nume/valoare, de exemplu textarea/"Buna ziua, va scriu..." => trebuie folosit atributul "id" pe fiecare camp din <form>
+
+
+
+
+
+
+
