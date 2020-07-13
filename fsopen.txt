@@ -1,7 +1,79 @@
 
 Full Stack Open
 
---------------------Part 0 Fundamentals of Web apps--------------------
+--------------------Part 1--------------------
+
+Introduction to React
+----------------------------------------
+npm create-react-app in_this_folder
+-create-react-app = se compileaza automat la salvare
+-to start the server, use npm start
+-trebuia pus exact codul din index.js, fara serviceWorker ca sa mearga
+
+Component
+--------------------
+-all content that needs to be rendered is defined as a React component
+-React component = practic, o functie JavaScript
+-codul scris intre acolade...
+const App = () => {
+..
+}
+...este evaluat si rezultatul este pus intre elementele (tag-urile) HTML si apoi randat pe pagina web
+
+JSX
+--------------------
+-JSX = cod scris in componente React care se compileaza in cod JavaScript, vezi JSX-1.png
+-JSX este ca un HTML dar care permite includerea de continut dinamic scris in JavaScript
+-in JSX, tag-urile ca <br> trebuie inchise precum <br />
+
+Multiple components
+--------------------
+-se pot scrie componente React care pot fi folosite de mai multe ori in aceeasi componenta-radacina <App />, de exemplu:
+const Hello = () => {
+  return (
+    <div>
+      <p>Hello world</p>
+    </div>
+  )
+}
+-va fi folosita astfel:
+<Hello />
+
+props: passing data to components
+--------------------
+-props = permit transmiterea de date componentelor, precum parametrii unei functii
+-daca componenta <Hello /> permite transmiterea de date prin props...
+const Hello = (props) => {
+..
+	<p> Hello {props.name} </p>
+..
+}...atunci in <App />, numele pe care il dam campului props, la noi "name" va fi folosit ca un atribut dintr-un tag HTML:
+<Hello name="Adrian" />
+-se pot folosi mai multe campuri pentru props: props.name, props.age, props.job, etc.
+
+Some notes
+--------------------
+-always have the console open and Console.log(messages_if_needed);
+-componentele React se scriu cu litera mare, deci Footer nu e acelasi cu tag-ul <footer>
+-<App /> trebuie sa contina cel putin un element-radacina, de ex. <div> => altfel, eroare de compilare
+-se poate insa pune tag-uri goale <> si </> in loc de acel <div> si va compila cu succes si scapam de acel <div> care este intrinsec
+
+Exercises 1.1, 1.2:
+--------------------
+rm -rf .git = pentru ca create-react-app face ca proiectul sa fie si un repo
+-a trebuit sa fac un array pentru props pentru a il folosi precum voia cerinta 1.2
+
+JavaScript
+----------------------------------------
+Component state, event handlers
+----------------------------------------
+A more complex state, debugging React apps
+----------------------------------------
+
+--------------------Part 0--------------------
+
+Fundamentals of Web apps
+----------------------------------------
 -F12 = opens Console
 -Preserve log = logs printed by the app as the page is reloaded
 -Disable cache in the Network tab
