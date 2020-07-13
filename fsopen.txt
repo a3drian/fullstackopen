@@ -65,6 +65,70 @@ rm -rf .git = pentru ca create-react-app face ca proiectul sa fie si un repo
 
 JavaScript
 ----------------------------------------
+-transpilation = cod nou de JavaScript tradus in cod vechi care e compatibil cu toate browser-ele
+-transpilation se face cu Babel si se face automat in React cu create-react-app
+-Node.js = JavaScript runtime environment
+node name_of_file.js = se ruleaza codul din name_of_file.js
+
+Variables
+--------------------
+-tipul unei variabile cu let se poate schimba in timpul executiei
+
+Arrays
+--------------------
+-un array declarat cu const poate fi modificat
+-un array e un obiect
+-forEach se aplica pentru fiecare element din array => poti aplica o functie pe fiecare element
+-in React se prefara .concat(5) pentru a adauga 5 in array, spre deosebire de .push(5)
+-concat() va returna un nou array
+-functia .map() se poate aplica pentru fiecare element din array:
+const m1 = t.map(value => value * 2)
+-aici, se dubleaza fiecare element din array
+-folosind destructuring assignment, parantezele drepte peste un array, de exemplu:
+const t = [1, 2, 3, 4, 5]
+
+const [first, second, ...rest] = t
+
+console.log(first, second)	// 1, 2 is printed
+console.log(rest)			// [3, 4 ,5] is printed
+-destructuring assignment = face unpack de valori din array sau proprietati din obiecte
+
+Objects
+--------------------
+-se pot adauga proprietati on the fly:
+object1.address = 'Helsinki'
+object1['secret number'] = 12341
+-pentru 'secret number' trebuie sa folosim [] pentru ca avem spatiu in String si nu poate fi accesat cu .
+
+Functions
+--------------------
+-se pot defini fara () si {}...
+const square = p => p * p
+...daca iau un singur parametru si daca sunt functii cu o singura instructiune
+-folosite impreuna cu .map():
+const t = [1, 2, 3]
+const tSquared = t.map(p => p * p)
+-functiile se pot folosi asa...
+const average = function(a, b) {..}
+const result = average(2, 5)
+...sau asa:
+function product(a, b) {..}
+const result = product(2, 6)
+
+Exercises 1.3-1.5:
+--------------------
+-se continua in ex_1.1
+-se recomanda printarea props pentru a vedea exact ce parametru primeste componenta React
+-a trebuit sa pun props.content ca sa ajung la continutul part1, part2 si part3 din <App />
+-
+
+Object methods and "this"
+--------------------
+Classes
+--------------------
+JavaScript materials
+--------------------
+
 Component state, event handlers
 ----------------------------------------
 A more complex state, debugging React apps
