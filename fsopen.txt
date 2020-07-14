@@ -5,7 +5,7 @@ Full Stack Open
 
 Introduction to React
 ----------------------------------------
-npm create-react-app in_this_folder
+npx create-react-app in_this_folder
 -create-react-app = se compileaza automat la salvare
 -to start the server, use npm start
 -trebuia pus exact codul din index.js, fara serviceWorker ca sa mearga
@@ -53,7 +53,7 @@ const Hello = (props) => {
 
 Some notes
 --------------------
--always have the console open and Console.log(messages_if_needed);
+-always have the console open and console.log(messages_if_needed);
 -componentele React se scriu cu litera mare, deci Footer nu e acelasi cu tag-ul <footer>
 -<App /> trebuie sa contina cel putin un element-radacina, de ex. <div> => altfel, eroare de compilare
 -se poate insa pune tag-uri goale <> si </> in loc de acel <div> si va compila cu succes si scapam de acel <div> care este intrinsec
@@ -120,19 +120,283 @@ Exercises 1.3-1.5:
 -se continua in ex_1.1
 -se recomanda printarea props pentru a vedea exact ce parametru primeste componenta React
 -a trebuit sa pun props.content ca sa ajung la continutul part1, part2 si part3 din <App />
--
 
 Object methods and "this"
 --------------------
+-nu avem nevoie sa definim obiecte cu metode cand folosim React hooks, vezi (https://reactjs.org/docs/hooks-intro.html)
+const referenceToAddition = arto.doAddition
+referenceToAddition(10, 15)	// 25 is printed
+-referenceToAddition este o referinta la metoda doAddition() din obiectul arto:
+const arto = {
+	name: 'Arto Hellas',
+	..
+	greet: function() {
+		console.log('hello, my name is ' + this.name)
+	},
+	doAddition: function(a, b) {
+		console.log(a + b)
+	},
+}
+-se pierde referinta la obiectul arto daca folosim o referinta la metoda greet() din arto:
+arto.greet()		// "hello, my name is Arto Hellas" gets printed
+const referenceToGreet = arto.greet
+referenceToGreet()	// prints "hello, my name is undefined"
+-se observa ca referenceToGreet() nu mai indica obiectul arto corespunzator
+-de asemenea, valoarea lui "this" se modifica in functie de cum s-a facut apelul catre functia respectiva
+.in cazul nostru, printr-o referinta, fie referenceToAddition, fie referenceToGreet, "this" nu se refera la obiectul "arto", ci la obiectul global, vezi (https://developer.mozilla.org/en-US/docs/Glossary/Global_object) si de aceea returneaza "undefined" pentru ca nu gaseste numele "Arto Hellas"
+-daca engine-ul de JavaScript apeleaza referenceToAddition sau referenceToGreet atunci prin "this" se va referi la obiectul global si nu la "arto"
+-folosind bind, se creeaza o functie noua care va lucra exclusiv cu obiectul "arto" indiferent de unde si cum este metoda greet() apelata:
+setTimeout(arto.greet.bind(arto), 1000)
+-arrow functions nu functioneaza deloc cu "this"
+
 Classes
 --------------------
+-la baza unei clase sta tot un Object
+
 JavaScript materials
 --------------------
+You-Don't-Know-JS = (https://github.com/getify/You-Dont-Know-JS) = book cu repo
+javascript.info
+egghead.io
+(https://developer.mozilla.org/en-US/docs/Web/JavaScript/A_re-introduction_to_JavaScript):
+-sunt diferente intre parseInt() si parseFloat()
+-undefined e o constanta
+-false, 0, empty strings (""), NaN, null, and undefined sunt toate false, oricare altul este true
+-truthy si falsy se refera la valori care pot lua valori adevarate, respectiv false
+-de exemplu, alea de mai sus care sunt toate false se numesc valori falsy
+-doar functiile au scope, deci o variabila declarata cu var e vizibila in toata functia, chiar daca poate variabila var a fost declarata in interiorul unui if(..)
+-doar let si const iti permit block-scoped variables
+'3' + 4 + 5;  // "345"
+ 3 + 4 + '5'; // "75"
+-=== verifica si tipul variabilelor pentru care se testeaza egalitatea
+for (let value of array) {
+  // do something with value, BUN pentru array!
+}
+for (let property in object) {
+  // do something with object property, BUN pentru obiecte!
+}
+-&& si || se executa mai departe doar daca partea din stanga este adevarata:
+var name = o && o.getName();	//null-value checking
+var obj = {}; = cum se creeaza un nou obiect
+-.length dintr-un array returneaza index-ul maxim din array + 1 =>
+var a = ['dog', 'cat', 'hen'];
+a[100] = 'fox';
+a.length; // 101
+-cu alte cuvinte, .length nu returneaza neaparat numarul de elemente din array
+-o functie care primeste un numar variabil de parametri:
+function avg(...args) {..}
+.args va fi un array de valori primite ca parametru din apel de genul:
+avg(2, 3, 4, 5);
+...args = rest arguments, in ...args sunt "rest of the arguments"
+-functiile sunt obiecte in JavaScript
+-daca apelezi o functie a unui obiect (metoda) cu .functi() sau ['functie], prin "this" se refera la obiectul curent
+-daca functia se apeleaza printr-o referinta, cum am vazut mai sus, "this" se refera la obiectul global
+-keyword "new" (?)
+-deoarece .prototype este un obiect partajat de toate instantele Person, toate campurile sau metodele asignate pe Person.prototype sunt valabile tuturor instantelor prin "this" (?)
+.practic asta iti permite sa adaugi campuri si metode on the fly
+-apply() asteapta ca prim parametru obiectul care ar trebui tratat ca "this", ca obiectul curent
+-functiile imbricate au acces la variabilele din scope-ul functiei din care fac parte
+-obiectul global poate fi accesat prin "this" in cod sau prin "window" in browser
+-de fiecare data cand JavaScript executa o functie, se creeaza un 'scope' object care retine toate variabilele locale create inauntrul acelei functii
+-este asemanator cu acel obiect global, dar acest obiect nu poate fi accesat direct din cod sau iterat peste proprietatile acestuia
+-aceste 'scope' objects formeaza "scope chain" si impreuna cu functiile in care au fost create (sau care au determinat la creearea lor) formeaza "closures"
 
 Component state, event handlers
 ----------------------------------------
+Component helper functions
+--------------------
+-o functie definita in interiorul unei componente React are acces la props
+-functions within functions are common in JavaScript
+
+Destructuring
+--------------------
+-destructuring permite despachetarea componentelor din props, aici name si age:
+const Hello = (props) => {
+	const { name, age } = props
+	..
+}
+-mai mult, despachetarea poate avea loc in antetul functiei:
+const Hello = ({ name, age }) => {..}
+-se foloseste atunci cand vrem ca proprietatile props.name si props.age sa nu mai fie transmise printr-un obiect props, ci sa fie direct asignate variabilelor name si age
+
+Page re-rendering
+--------------------
+-se poate folosi functia setInterval()
+-page re-rendering nu se face prin apel de ReactDOM.render
+
+Stateful component
+--------------------
+-page re-rendering se face folosind React hooks importand { useState } from 'react'
+-folosind useState(0) practic se adauga o "stare" (state) componentei React numita Counter
+-setCounter() va reprezenta o functie care va modifica starea componentei prin variabila "counter"
+-setCounter() se apeleaza din setTimeout() la o secunda dupa ce setTimeout() a fost apelat:
+setTimeout(
+	() => setCounter(counter + 1),
+	1000
+)
+-daca se apeleaza setCounter(), componenta React se re-randeaza
+-de fiecare data cand se modifica variabila counter prin apel de setCounter(), componenta React se re-randeaza
+
+Event handling
+--------------------
+-<button> are atributul onClick cu care putem asigna un event handler:
+<button onClick={ handlePlus }>
+-se foloseste tot functia setCounter() dar de data asta va fi apelata din interiorul event handler-ului numit "handlePlus" sau "resetCounter"
+
+Event handler is a function
+--------------------
+-in onClick={..} trebuie pusa o functie sau o referinta la o functie, nu merge direct apelul catre setCounter()
+-nu se recomanda definirea de event handler astfel...
+<button onClick={() => setCounter(counter + 1)}>
+...ci se recomanda creearea unei functii separate care sa fie apelate din onClick={..}:
+<button onClick={increaseByOne}>
+
+Passing state to child components
+--------------------
+-cand vrem ca o "stare" (state) sa reflecte aceeasi schimbare a componentei, in cazul nostru, vrem ca starea counter-ului sa fie uniforma peste intregul index.js, adica increaseByOne si decreaseByOne si setToZero sa se refere la aceeasi stare a counter-ului
+-lift the state up = atunci aceasta "stare" se urca in ierarhie componentelor React spre cel mai apropiat stramos (ancestor)
+-am folosit o componenta React de tip buton care primeste o functie prin props: increaseByOne, decreaseByOne si setToZero
+
+Changes in state cause rerendering
+--------------------
+-fiecare apel care modifica starea determina componenta React sa se re-randeze
+-cand porneste aplicatia, se ruleaza codul din <App />
+-folosind state hooks prin useState se atribuie lui <App /> o "stare" prin variabila counter care initial ia valoarea 0 pentru ca am folosit useState(0)
+.useState(0) returneaza un stateful value, acel counter si o functie care poate modifica starea acestui counter, functia setCounter()
+-in <App /> avem <Display> si trei <Button>
+-fiecare <Button> are un event handler care schimba starea counter-ului
+-la fiecare schimbare de stare, se determina re-randarea componentei React
+-cand se re-randeaza <App /> practic se re-randeaza si celelalte componente <Display> si <Button>
+
+Refactoring the components
+--------------------
+-in VSC, shortcut e F2
+
 A more complex state, debugging React apps
 ----------------------------------------
+Complex state
+--------------------
+-useState poate fi folosit pentru a crea mai multe "stari"
+-object spread syntax, acel ...clicks:
+const handleRightClick = () => {
+	const newClicks = { 
+		...clicks, 
+		right: clicks.right + 1 
+	}
+	setClicks(newClicks)
+}
+-...clicks = face o copie a obiectului clicks si creeaza astfel un nou obiect clicks
+-nu este necesara asignarea in variabila newClicks pentru a face modificari asupra clicks.right:
+const handleRightClick = () =>
+	setClicks({ ...clicks, right: clicks.right + 1 })
+-este interzisa modificarea "starii" in mod direct:
+const handleRightClick = () => {
+	clicks.right++
+	setClicks(clicks)
+}
+-se observa ca prin object spread syntax de mai sus, am creat un nou obiect clicks prin copierea celui vechi => asta este modul de lucru cu stari in React
+-schimbarea starii in React se face prin crearea unui nou obiect in care sa se reflecte aceasta noua stare
+.cu alte cuvinte, cand se schimba starea, se creeaza un nou obiect in care se "retine" aceasta "stare" si nu se modifica "starea" in mod direct
+-de asemenea, faptul ca am folosit un useState(0) pentru left si un useState(0) pentru right a fost o idee mai buna decat folosirea unui singur useState pentru ca nu a complicat in mod inutil codul si nu aduce niciun beneficiu folosirea unui singur useState
+
+Handling arrays
+--------------------
+-in loc de useState(), am folosit...
+const [allClicks, setAll] = useState([])
+...unde allClicks se initializeaza acum cu un array gol si nu cu integer 0
+-retinem ca prin .concat()...
+setAll(allClicks.concat('L'))
+...se creeaza un array nou
+-din nou, se recomanda .concat() si nu .push() pentru ca .push() ar modifica in mod direct "starea" obiectului allClicks si noi vrem ca noua schimbare sa fie reflectata intr-un obiect nou
+-se foloseste .join(' ') pe allClicks pentru a impreuna toate caracterele intr-un singur String despartite de cate un ' '
+
+Conditional rendering
+--------------------
+-conditional rendering = poti randa diferite componente React in functie de "starea" unei componente
+-de exemplu, poti randa instructiunea "Folositi butoanele" daca allClicks are lungimea 0 sau poti randa chiar vectorul allClicks, adica un sir de genul "L L R L..." daca lungimea este diferita de 0
+-practic, componenta <History> are doua declaratii return, in functie de lungimea allClicks
+
+Old React
+--------------------
+-inaintea de folosirea React hooks, se foloseau clase JavaScript pentru componentele React care aveau nevoie de definirea de "stare"
+-aceste clase se numesc React class components
+
+Debugging React applications
+--------------------
+-find and fix the problems immediately
+-e mai simplu de facut debug atunci cand nu despachetam direct in antet obiectul props, pentru a il putea folosi intr-un console.log():
+const Button = (props) => {
+	console.log(props)
+	..
+}
+-de asemenea, se recomanda in console.log() separarea prin virgula:
+console.log('props value is', props)
+-folosind keyword debugger oriunde in cod, executia codului se opreste in browser si se poate inspecta tab-ul "Debugger" => debugger e un fel de breakpoint
+-din tab-ul "Debugger", daca intri pe fisierul .js se pot pune breakpoints dand click pe linia corespunzatoare
+-starile, in React Dev Tools (Components) nu sunt afisate in ordinea in care au fost definite in fisierul .js
+
+Rules of Hooks
+--------------------
+-React hooks trebuie apelate neaparat din interiorul functiilor care definesc componentele React
+-nu trebuie apelate din if(), for(), etc. sau din functions with functions
+
+Event Handling Revisited
+--------------------
+-butonul reactioneaza la evenimentul de click printr-un event handler
+-event handler = mereu functii sau referinte catre functii, niciodata variabila sau orice alt tip in afara de functie sau referinta catre functie
+-in exemplul de mai jos, event handler-ul este o functie...
+<button onClick={console.log('clicked the button')}>
+...dar este de fapt un apel catre functia console.log(), ceea ce inseamna ca pentru onClick se va atribui valoarea returnata de apelul catre functia console.log() => undefined in acest caz
+-abordarea corecta este...
+<button onClick={() => console.log('clicked the button')}>
+...unde lui onClick i se atribuie o referinta catre arrow function, catre acel () => ..
+<button onClick={setValue(0)}>button</button> = cauzeaza un infinte loop pentru ca la fiecare render de pagina se apeleaza setValue(0)
+
+Function that returns a function
+--------------------
+-definitiile celor doua functii sunt echivalente:
+const hello = (who) => {
+	const handler = () => console.log('hello', who)
+	return handler
+}
+const hello = (who) => () => {
+	console.log('hello', who)
+}
+-deoarece hello() returneaza functia handler() inseamna ca i se poate atribui lui onClick, deci practic...
+<button onClick={hello('world')}>
+...devine:
+<button onClick={() => console.log('hello world')}> // unde 'world' este valoarea parametrului 'who'
+-definind astfel functia hello() o putem personaliza prin acest parametr 'who'
+-functiile care returneaza functii sunt folositoare in scrierea de cod generic, de exemplu o functie care sa reseteze counter-ul la o valoarea custom, 0, 50, 100, 1000, etc.:
+<button onClick={setToValue(1000)}>thousand</button>
+-codul generic insa se poate scrie si direct:
+<button onClick={() => setToValue(1000)}>
+-it's a matter of choice between the two
+
+Passing Event Handlers to Child Components
+--------------------
+-trebuie sa coincida atributul cu numele de props transmis componentei:
+<Button onClick={resetRightClick} text='reset right to 0' />
+const { onClick, text } = props
+-onClick si text din <Button> coincide cu onClick si text din componenta React
+
+Do Not Define Components Within Components
+--------------------
+-componenta <Button> a fost definita in afara <App /> => metoda corecta de a defini componente React
+
+Useful Reading
+--------------------
+-(https://egghead.io/courses/the-beginner-s-guide-to-reactjs) = un tutorial bun de React care foloseste React hooks in loc de React class components
+-de asemenea, documentatia oficiala este recomandata (https://reactjs.org/docs/hello-world.html)
+
+Exercises 1.6-1.14:
+--------------------
+1.6
+-de ce nu a mers sa fac o functie giveFeedback() care sa primeasca pe rand ca parametru pe good, bad si neutral (?)
+1.11
+-vezi (https://github.com/facebook/react/issues/5652#issuecomment-164175731) explicatie pentru ce <tr> si <td> trebuie incluse intr-un <tbody>..</tbody>
+11.13
+-aici am ramas (?)
 
 --------------------Part 0--------------------
 
