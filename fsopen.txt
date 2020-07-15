@@ -397,6 +397,10 @@ Exercises 1.6-1.14:
 -vezi (https://github.com/facebook/react/issues/5652#issuecomment-164175731) explicatie pentru ce <tr> si <td> trebuie incluse intr-un <tbody>..</tbody>
 11.13
 -aici am ramas (?)
+11.14
+-a trebuit sa pun ... in Math.max() sa imi calculeze maximul din array:
+const maxVotes = Math.max(...anecdotesVotes);
+-nu iti da eroare daca nu se potriveste atributul din componenta cu numele cu care il apelezi din <App />, gen 'anecodote' diferit de 'anecdote' dar nu da eroare
 
 --------------------Part 0--------------------
 

@@ -154,18 +154,94 @@ const Statistics = (props) => {
   )
 }
 
+// from MDN
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
 
-console.log(getRandomInt(3));
-// expected output: 0, 1 or 2
+const GetMostVotedAnecdote = (anecdotes, anecdotesVotes) => {
+
+  console.log('GetMostVotedAnecdote()');
+
+  const maxVotes = Math.max(...anecdotesVotes);
+  const index = anecdotesVotes.indexOf(maxVotes);
+  const mostVotedAnecdote = anecdotes[index];
+
+  console.log('maxVotes', maxVotes);
+  console.log('index', index);
+  console.log('mostVotedAnecdote', mostVotedAnecdote);
+
+  const mostVotedAnecdoteObj = {
+    anecdote: mostVotedAnecdote,
+    votes: maxVotes
+  }
+  console.log('mostVotedAnecdoteObj', mostVotedAnecdoteObj);
+
+  return mostVotedAnecdoteObj;
+}
+
+const DisplayAnecdote = (props) => {
+
+  console.log('DisplayAnecdote()')
+  console.log(props)
+
+  const { anecdote, votes } = props
+
+  return (
+    <div>
+      <div>
+        {anecdote}
+      </div>
+      <div>
+        <p>has {votes} votes.</p>
+      </div>
+    </div>
+  )
+}
+
+const DisplayMostVotedAnecdote = (props) => {
+
+  console.log('DisplayAnecdote()')
+  console.log(props)
+
+  const { anecdote, votes } = props
+
+  if (votes === 0) {
+    return (
+      <div>
+        <p>No votes cast.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div>
+        {anecdote}
+      </div>
+      <div>
+        <p>has {votes} votes.</p>
+      </div>
+    </div>
+  )
+}
 
 const App = (props) => {
 
   const { anecdotes } = props
 
+  // event handling for button 'next anecdote'
   const [selected, setSelected] = useState(0)
+
+  // empty array for button 'vote anecdote'
+  const [anecdotesVotes, setVotes] = useState(Array(anecdotes.length).fill(0))
+  console.log(anecdotesVotes)
+
+  // event handling for most voted anecdote
+  const [mostAnecdotesVotes, setMostVotes] = useState({
+    anecdote: '',
+    votes: 0
+  })
 
   // save clicks of each button to own state
   const [good, setGood] = useState(0)
@@ -212,6 +288,26 @@ const App = (props) => {
   const selectAnecdote = () => {
     const rand = getRandomInt(anecdotes.length)
     setSelected(rand)
+
+    const mostVotedAnecdote = GetMostVotedAnecdote(anecdotes, anecdotesVotes);
+    console.log('mostVotedAnecdote', mostVotedAnecdote);
+    setMostVotes(mostVotedAnecdote);
+  }
+
+  const voteAnecdote = () => {
+    console.log('voteAnecdote()')
+
+    const copy = [...anecdotesVotes]
+    copy[selected] += 1
+
+    setVotes(copy)
+
+    console.log(anecdotesVotes)
+
+    const mostVotedAnecdote = GetMostVotedAnecdote(anecdotes, anecdotesVotes);
+    console.log('mostVotedAnecdote', mostVotedAnecdote);
+    setMostVotes(mostVotedAnecdote);
+
   }
 
   return (
@@ -227,12 +323,15 @@ const App = (props) => {
       <Button handleClick={reset} text='reset' />
 
       <h1>Anecdote of the day</h1>
-      <div>
-        {props.anecdotes[selected]}
-      </div>
+      <DisplayAnecdote anecdote={props.anecdotes[selected]}
+        votes={anecdotesVotes[selected]} />
+      <Button handleClick={voteAnecdote} text='vote anecdote' />
       <Button handleClick={selectAnecdote} text='next anecdote' />
 
       <h1>Anecdote with most votes</h1>
+      <DisplayMostVotedAnecdote anecdote={mostAnecdotesVotes.anecdote}
+        votes={mostAnecdotesVotes.votes} />
+
     </div>
   )
 }
