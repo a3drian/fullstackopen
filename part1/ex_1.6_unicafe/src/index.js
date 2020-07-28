@@ -15,20 +15,6 @@ const Button = (props) => {
   )
 }
 
-const Display = (props) => {
-
-  console.log('Display()')
-  console.log(props)
-
-  const { text, value } = props
-
-  return (
-    // <div>
-    <p>{text} {value}</p>
-    // </div>
-  )
-}
-
 const GetAverage = (array) => {
 
   console.log('GetAverage()')
@@ -48,7 +34,9 @@ const GetPositiveFeedback = (good, total) => {
   console.log(good)
   console.log(total)
 
-  return (good * 100) / total;
+  const value = (good * 100) / total
+
+  return value;
 }
 
 const Statistics = (props) => {
@@ -61,7 +49,7 @@ const Statistics = (props) => {
   if (total === 0) {
     return (
       <div>
-        <p>No feedback given</p>
+        <p>No feedback given.</p>
       </div>
     )
   }
@@ -80,13 +68,6 @@ const Statistics = (props) => {
 
   return (
     <div>
-
-      {/* <Display text='good' value={good} />
-      <Display text='bad' value={bad} />
-      <Display text='neutral' value={neutral} />
-      <Display text='all' value={total} />
-      <Display text='average' value={average} />
-      <Display text='positive' value={positiveFeedback} /> */}
 
       <table>
         <tbody>
@@ -155,8 +136,10 @@ const Statistics = (props) => {
 }
 
 // from MDN
-function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max));
+function GetRandomInt(max) {
+  const rand = Math.floor(Math.random() * Math.floor(max))
+  console.log('rand', rand);
+  return rand;
 }
 
 const GetMostVotedAnecdote = (anecdotes, anecdotesVotes) => {
@@ -180,6 +163,8 @@ const GetMostVotedAnecdote = (anecdotes, anecdotesVotes) => {
   return mostVotedAnecdoteObj;
 }
 
+// displays 'Anecdote of the day'
+// also used by 'Anecdote with most views' if votes have been cast, ie. if there is at least one anecdote with a vote different to 0
 const DisplayAnecdote = (props) => {
 
   console.log('DisplayAnecdote()')
@@ -201,7 +186,7 @@ const DisplayAnecdote = (props) => {
 
 const DisplayMostVotedAnecdote = (props) => {
 
-  console.log('DisplayAnecdote()')
+  console.log('DisplayMostVotedAnecdote()')
   console.log(props)
 
   const { anecdote, votes } = props
@@ -215,14 +200,7 @@ const DisplayMostVotedAnecdote = (props) => {
   }
 
   return (
-    <div>
-      <div>
-        {anecdote}
-      </div>
-      <div>
-        <p>has {votes} votes.</p>
-      </div>
-    </div>
+    <DisplayAnecdote anecdote={anecdote} votes={votes} />
   )
 }
 
@@ -238,60 +216,62 @@ const App = (props) => {
   console.log(anecdotesVotes)
 
   // event handling for most voted anecdote
-  const [mostAnecdotesVotes, setMostVotes] = useState({
-    anecdote: '',
-    votes: 0
-  })
+  const [mostAnecdotesVotes, setMostVotes] = useState(
+    {
+      anecdote: '',
+      votes: 0
+    }
+  )
 
   // save clicks of each button to own state
   const [good, setGood] = useState(0)
   const [neutral, setNeutral] = useState(0)
   const [bad, setBad] = useState(0)
-  const [allScores, setAllScores] = useState([])
+  const [scores, setScores] = useState([])
   const [total, setTotal] = useState(0)
 
   const goodFeedback = () => {
     console.log(good);
     setGood(good + 1);
-    setAllScores(allScores.concat(1));
+    setScores(scores.concat(1));
     setTotal(total + 1);
   }
 
   const badFeedback = () => {
     console.log(bad);
     setBad(bad + 1);
-    setAllScores(allScores.concat(-1));
+    setScores(scores.concat(-1));
     setTotal(total + 1);
   }
 
   const neutralFeedback = () => {
     console.log(neutral);
     setNeutral(neutral + 1);
-    setAllScores(allScores.concat(0));
+    setScores(scores.concat(0));
     setTotal(total + 1);
   }
 
-  const reset = () => {
+  const resetFeedback = () => {
     setGood(0);
     setBad(0);
     setNeutral(0);
-    setAllScores([]);
+    setScores([]);  // -1 bad, 0 neutral, 1 good
     setTotal(0);
   }
 
-  const goodText = 'good';
-  const badText = 'bad';
-  const neutralText = 'neutral';
-
   const allFeedback = [good, bad, neutral];
 
-  const selectAnecdote = () => {
-    const rand = getRandomInt(anecdotes.length)
-    setSelected(rand)
-
+  const updateMostVotedAnecdote = () => {
     const mostVotedAnecdote = GetMostVotedAnecdote(anecdotes, anecdotesVotes);
     console.log('mostVotedAnecdote', mostVotedAnecdote);
     setMostVotes(mostVotedAnecdote);
+  }
+
+  const selectAnecdote = () => {
+    const rand = GetRandomInt(anecdotes.length)
+    setSelected(rand)
+
+    updateMostVotedAnecdote();
   }
 
   const voteAnecdote = () => {
@@ -304,23 +284,21 @@ const App = (props) => {
 
     console.log(anecdotesVotes)
 
-    const mostVotedAnecdote = GetMostVotedAnecdote(anecdotes, anecdotesVotes);
-    console.log('mostVotedAnecdote', mostVotedAnecdote);
-    setMostVotes(mostVotedAnecdote);
-
+    updateMostVotedAnecdote();
   }
 
   return (
     <div>
-      <h1>give feedback</h1>
-      <Button handleClick={goodFeedback} text={goodText} />
-      <Button handleClick={neutralFeedback} text={neutralText} />
-      <Button handleClick={badFeedback} text={badText} />
 
-      <h1>statistics</h1>
-      <Statistics feedback={allFeedback} scores={allScores} total={total} />
+      <h1>Give feedback</h1>
+      <Button handleClick={goodFeedback} text='good' />
+      <Button handleClick={neutralFeedback} text='neutral' />
+      <Button handleClick={badFeedback} text='bad' />
 
-      <Button handleClick={reset} text='reset' />
+      <h1>Statistics</h1>
+      <Statistics feedback={allFeedback} scores={scores} total={total} />
+
+      {/* <Button handleClick={resetFeedback} text='reset feedback' /> */}
 
       <h1>Anecdote of the day</h1>
       <DisplayAnecdote anecdote={props.anecdotes[selected]}

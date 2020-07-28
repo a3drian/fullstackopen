@@ -1,9 +1,478 @@
 
 Full Stack Open
 
---------------------Part 1--------------------
+--------------------Part 2, Communicating with server--------------------
 
-Introduction to React
+a. Rendering a collection, modules
+----------------------------------------
+console.log
+--------------------
+-separate things to be printed with a comma, ca in Python:
+console.log('props:', props);
+-daca folosesti "+" in loc de "," in consola apare ceva de genul "props: [Object object]" which is pretty useless
+
+Protip: Visual Studio Code snippets
+--------------------
+-how to create snippets:
+https://code.visualstudio.com/docs/editor/userdefinedsnippets#_creating-your-own-snippets
+-am instalat extensia de aici:
+https://marketplace.visualstudio.com/items?itemName=xabikos.ReactSnippets
+
+JavaScript Arrays
+--------------------
+-vom folosi find(), filter(), map()
+
+Higher-order functions - Part 1 of Functional Programming in JavaScript
+(https://www.youtube.com/watch?v=BMUiFMZr7vk&list=PL0zVEGEvSaeEd9hlmCXrk5yUyqUag-n84&index=1)
+-permit scrierea de cod mai reutilizabil
+-functions are values
+-practic, poti crea o functie si sa o atribui unei variabile
+-de asemenea, poti sa trimiti o functie ca parametru unei alte functii => higher-order function
+-composition = pui o functie ca parametru unei alte functii apoi acea functie ca parametru unei alte functii, etc.
+-filter() primeste ca parametru o alta functie => higher-order function
+-filter() permite filtrarea intr-un array:
+let animals = [
+{ 	name: 'Hamilton', species: 'dog' },
+{	.. }
+]
+var dogs = animals.filter(function(animal) {
+	return animal.species === 'dog'
+})
+-se observa ca filter() a primit ca parametru un anonymous function
+-acea anonymous function e un callback pentru ca functia gazda (host) va apela (call) aceasta functie anonima
+-filter() itereaza prin array, deci e practic ca un for() peste care impui un filtru
+-functia anonima poate fi atribuita unei variabile:
+let isDog = function(animal) {
+	return animal.species === 'dog'
+}
+-oarecum opusul lui filter() este reject()
+-cu "nodemon" se deschide un server, trebuie sa folosim "node index.js" sa rulam fisierul
+
+Map - Part 2 of Functional Programming in JavaScript
+(https://www.youtube.com/watch?v=bCqtb-Z5YGQ&list=PL0zVEGEvSaeEd9hlmCXrk5yUyqUag-n84&index=2)
+-daca inainte creeam functia anonima care sa returneze true sau false, acum returnam ca sa includa in array:
+let names = animals.map(function(animal) {
+	return animal.name
+})
+-aici nu mai comparam "animal === 'dog'" ci ii spunem lui map() sa include numele animalului
+-cu arrow functions codul devine:
+let names = animals.map((animal) => animal.name);
+
+Reduce basics - Part 3 of Functional Programming in JavaScript
+(https://www.youtube.com/watch?v=Wl98eZpkp-c&list=PL0zVEGEvSaeEd9hlmCXrk5yUyqUag-n84&index=3)
+-find() face acelasi lucru cu filter() dar returneaza doar primul element care se potriveste criteriului de cautare
+-reduce() se foloseste astfel:
+let totalAmount = orders.reduce(function(sum, order) {
+	return sum + order.amount
+}, 0);
+-"sum" incepe de la 0 pentru ca asa a fost definita functia de callback pentru reduce()
+-"order" sau array-ul in care se face filtrarea se pune ca al doilea parametru
+-practic "order" este pe rand cate un element din "orders", cam cum e la foreach()
+-reduce() este o functie care permite scrirea de cod general, practic poate face acelasi lucru cu find(), filter(), map() si reject()
+
+Reduce Advanced - Part 4 of Functional Programming in JavaScript
+(https://www.youtube.com/watch?v=1DMolJ2FrNY&list=PL0zVEGEvSaeEd9hlmCXrk5yUyqUag-n84&index=4)
+-redenumisem fisierul si cand dadeam "node index.js" zicea "MODULE NOT FOUND"
+-nu a mers...
+import fs from 'fs';
+...dar a mers:
+const fs = require('fs');
+-uitasem sa pun "return customers" si atunci urmatorul obiect peste care itera era "undefined" => nu puteam extrage proprietati dintr-un obiect undefined
+-reduce poate incepe de la o valoare, 0 cum era in exemplu cu suma, sau de la un obiect gol:
+.reduce((customers, line) => {
+        console.log(customers)
+        customers[line[0]] = customers[line[0]] || []
+        customers[line[0]].push({
+            name: line[1],
+            price: line[2],
+            qty: line[3]
+        })
+        return customers;
+    }, {});
+-se observa "{}" de la sfarsit
+
+Event handlers revisited
+--------------------
+-event handler nu este o functie, ci este o atribuire de valoare
+-practic asta inseamna ca in "onClick" trebuie sa atribui ca valoare o functie care sa faca ceva atunci cand se declanseaza evenimentul apasarii pe buton
+-vezi correct-use-of-passing-event-handlers.png
+
+Rendering collections
+--------------------
+-cu...
+notes.map(note => <li>{note.content}</li>)
+...obtinem...
+[
+  <li>HTML is easy</li>,
+  <li>Browser can execute only JavaScript</li>,
+  <li>GET and POST are the most important methods of HTTP protocol</li>,
+]
+...ceea ce inseamna ca "{note.content}" poate fi inclus intr-un element <ul>:
+<ul>
+	{notes.map(note => <li>{note.content}</li>)}
+</ul>
+-astfel, am scapat de hardcode-area indicilor elementelor din notes
+
+Key-attribute
+--------------------
+-React suporta atributul "key" pe elementul <li>, vezi https://reactjs.org/docs/reconciliation.html#recursing-on-children
+-aceasta "key" poate fi o componenta a datelor cu care vrei sa populezi lista, eg. exista deja in datele noastre un camp care poate fi folosit ca "key"
+-tot ce trebuie sa facem noi este sa atribuim acest camp lui "key":
+<li key={note.id}>
+-astfel, se rezolva si eroarea "Each child in a list should have a unique "key" prop." din consola
+
+Map
+--------------------
+-map() mereu creeaza un nou array
+-acest nou array este creat din campuri ale array-ului original, eg. dintr-un array cu nume si varsta, cream un array doar cu nume
+
+Anti-pattern: array indexes as keys
+--------------------
+-poti lua indicele din array si sa il folosesti ca "key":
+notes.map((note, i) => ...)
+<li key={i}>
+..
+-cand map() este apealat in acest fel, acelui "i" i se va atribui index-ul din array al elementului
+-nu se folosesc indicii din array ca "key" in <li>, pentru ca poate afisa datele eronat, vezi https://medium.com/@robinpokorny/index-as-a-key-is-an-anti-pattern-e0349aece318
+-practic, fiecare din elementele din array trebuie sa aiba un "key" unic si permanent
+-daca se folosesc indici, nu este permanent pentru ca scoti un element din lista, dar indicele nu este "scos" => in locul acelui indice se afiseaza un alt element decat cel dorit
+-anti-pattern = atunci cand nu folosesti rezultatul unui functii de genul map(), care returneaza un array nou
+
+Refactoring modules
+--------------------
+-se observa ca nu numai elementul <li> are nevoie de un "key":
+<Note key={note.id} note={note} />
+-practic, "key" se defineste pentru componente React pentru ca React sa stie in ce ordine sa re-randeze elementele daca este nevoie, eg. cand se sterge un element din lista sau cand trebuie sa concateneze DOM trees, vezi tot https://reactjs.org/docs/reconciliation.html#recursing-on-children
+-dadea o eroare ciudata ca "note is undefined", referindu-se la apelul din...
+<Note key={note.id} note={note} />
+...ca si cum "note" din "note={note}" nu este numele exact din componenta React
+-daca puneam numele corect atunci aplicatia ramanea hanging (?)
+-componentele se pun in fisiere separate cu .js, se exporta componenta si se importa in index.js
+-chiar si App() poate fi pus in App.js
+-cand se cloneaza un proiect, se da mai intai "npm install" inainte de "npm start"
+
+When the application breaks
+--------------------
+-e mai bine sa definesti componente pe mai multe linii, ca sa poti pune mai multe instructiuni, inclusiv un console.log() daca este cazul
+-de asemenea, e bine sa folosim instructiunea return(<div>..</div>)
+-mai mult, e mai simplu de folosit "(props)" in loc de varianta despachetata "({notes})" pentru ca nu stim exact ce este continut in "props"
+
+Exercises 2.1-2.5
+--------------------
+-se continua exercitiile 1.1-1.5
+-(?)
+
+b. Forms
+----------------------------------------
+-se initializeaza "notes" ce vor fi afisate pe ecran in App()...
+const [notes, setNotes] = useState(props.notes)
+...si se initializeaza cu "props.notes" primite ca parametru, deci nu cu un array gol
+-am adaugat pe evenimentul "onSubmit" ce functie callback sa fie apelata (call, invocata) atunci cand se apasa butonul de save:
+<form onSubmit={addNote}>
+-prin "event.preventDefault()" se evita comportamentul default atunci cand se apasa save
+.in loc sa se reincarce pagina, evitam acest lucru prin preventDefault()
+-prin "event.target" se afiseaza elementul HTML legat de evenimentul primit ca parametru, in cazul nostru este elementul de tip <form> mentionat mai sus:
+const AddNote = (event) => {
+    event.preventDefault()
+    console.log('AddNote() button clicked', event.target)
+}
+-folosind "controlled components" putem accesa informatiile trimise prin elementul <form>, vezi https://reactjs.org/docs/forms.html#controlled-components
+-"You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`"
+-controlled component = cand starea componentei App (sau a unei componente React) se defineste comportamentul unui element
+.de exemplu, avem acest <form> al carui element <input> primeste ca atribut value o componenta React care are definita o stare:
+const [newNote, setNewNote] = useState(
+	'Insert a new note...'
+)
+.mai jos, avem:
+<form onSubmit={AddNote}>
+	<input value={newNote} />
+	..
+-deci avem o componenta React, newNote careia i se poate schimba starea pentru ca am folosit useState si am definit functia setNewNote() pentru ea
+-de asemenea, am folosit aceasta componenta React pentru a modifica direct (controleaza) comportamentul acelui element <input> din <form>
+.din aceste doua actiuni => am definit un "controlled component"
+-"HandleNoteChange" a trebuit sa fie definita in App() pentru a recunoaste functia setNewNote()
+-"event.target.value" se refera la exact continutul campului din <form>
+-acum, "event.target" nu se mai refera la <form> ci la <input>:
+const HandleNoteChange = (event) => {
+	console.log('HandleNoteChange()', event.target)
+	console.log('HandleNoteChange()', event.target.value)
+	setNewNote(event.target.value)
+}
+.e si logic pentru ca am creat un event handler separat pentru <form> si unul separat pentru <input>
+-in tabul "Components" din React Developer Tools, sub "hooks" se poate vedea continutul din <input> pe masura ce scrii in el
+-continutul pe care il punem in obiectul "noteObject" este practic starea lui "newNote" de mai sus
+.prin continut se intelege ce bagam in <form>
+-reamintim ca nu se modifica in mod direct "starea" unui obiect, de aceea folosim .concat() pentru ca functia va returna un array nou
+-de retinut ca starea unei componenta poate fi vazuta live din "hooks" sub "Components"
+
+Filtering displayed elements
+--------------------
+-cand vine vorba de comparatii se foloseste "===" pentru a compara si tipul obiectelor
+-daca punem "setShowAll(!showAll)", la fiecare click se face toggle intre a arata toate "notes" sau doar cele importante
+-prin "show {showAll ? 'important' : 'all' } notes" se schimba ce se afiseaza in textul butonului: "show all notes" sau "show important notes"
+
+Exercises 2.6-2.10
+--------------------
+-se creeaza "Phone book app"
+-(?)
+
+c. Getting data from server
+----------------------------------------
+-poti folosi un server JSON prin modulul "json-server":
+npm install -g json-server
+-daca vrem sa lucram cu o instalare locala trebuie sa includem "npx":
+npx json-server --port 3001 --watch db.json
+-intreaga baza de date, server-ul se va stoca in fisierul "db.json"
+
+The browser as a runtime environment
+--------------------
+-daca se iau date cu XMLHttpRequest practic se face un request HTTP printr-un obiect XHR
+-prin XHR nu se mai folosesc pentru ca s-au introdus metoda fetch() bazata pe promises
+-JavaScript este construit pe modelul asincron
+-operatiile IO, cu cateva exceptii, se executa "non-blocking" adica nu blocheaza firul de executie pana la terminarea executiei => dupa apelul unei operatii IO, codul se executa mai departe => nu se asteapta terminarea executiei apelului operatiei IO
+-cand in sfarsit se termina, se apeleaza acea functie care este inregistrata (registered) pentru a fi apelata atunci cand operatia IO s-a terminat, eg. acel callback
+-pentru ca aplicatia in JavaScript ruleaza pe un singur fir este foarte important ca operatiile IO sau cele care dureaza mult timp sa se execute asincron => nu se blocheaza server-ul cat timp acele operatii se executa => nu se blocheaza browser-ul
+-desi poti avea "web workers" care te ajuta sa scrii cod paralelizat, window-ul din browser este administrat de un singur thread
+-mai multe la (https://www.youtube.com/watch?v=8aGhZQkoFbQ):
+-cand oricare dintre web APIs termina de executat asincron, imping rezultatul in "Task queue" si nu direct in call stack
+-event loop este cel care ia din coada si pune in stiva, daca aceasta este goala
+-event loop este puntea intre stack, web APIs si task queue 3.png
+-event loop pune pe stiva doar daca aceasta este goala, vezi 4.png
+.de-aia la setTimeout() sa punea 0 ca parametru, sa-l trimita la web API si de acolo imediat in Task queue
+-parametrul din setTimeout() este un minim, adica va rula dupa sa zicem minim 1 secunda
+.e mai mult o indicatie, ca in C#, nu inseamna ca va rula la exact 1 secunda dupa apel
+-browser-ul ar dori sa faca render in window la fiecare 60 de secunde sa zicem
+-acele 60 de secunde depind de ce facem noi in JavaScript pentru ca "Render queue" este blocat de "Task queue" (Callback queue)
+-daca nu face render atunci practic nu poti face nimic pe acea pagina, pentru ca totul este blocat pana la golirea stivei pentru ca abia la golirea stivei se poate re-randa pagina
+
+npm
+--------------------
+-comenzile npm se dau in folder-ul in care exista package.json
+npm install axios --save
+-daca punem ca flag "-dev", atunci pachetul va fi instalat ca o development dependency, sub "devDependencies":
+npm install json-server --save-dev
+-daca sub "scripts" punem...
+"server": "json-server -p3001 --watch db.json"
+...atunci putem invoca "server" cu comanda "npm run server"
+.de aia functioneaza "npm run start", pentru ca se uita in package.json si cauta script-ul de "start"
+-diferenta dintre runtime si development, este ca modulul trebuie la runtime pentru ca aplicatia sa se execute corect
+-daca modulul era development dependency atunci aplicatia poate functiona si fara ea si va fi folosita doar in modul development
+
+Axios and promises
+--------------------
+-get() din Axios returneaza o promisiune
+-promise:
+.pending = valoarea de "fulfilled/resolved" sau "rejected" nu a fost inca atinsa, se afla inca in proces de determinare
+.fulfilled/resolved = nu se afla in proces, determina de regula o operatie incheiata cu succes
+.rejected = nu se afla in proces, determina o eroare care a impiedicat incheierea operatiunii cu sucess
+-rezultatul unei promisiuni se afiseaza cu then() care este un event handler legat de promise:
+promise.then(response => {
+	console.log(response)
+})
+-in codul de mai sus, practic se umple "response" cu rezultatul request-ului, unde acest rezultat al request-ului este continut in promisiune
+-acest rezultat contine datele, efectiv datele rezultate, status code, 200, 404, etc. si header-ele
+-get() si then() se pot scrie mai succint:
+axios.get('http://localhost:3001/notes').then(response => {
+	const notes = response.data
+	console.log(notes)
+})
+.se evita astfel salvarea request-ului intr-o variabila => se foloseste function chaining => se umple constanta "notes" cu rezultatul request-ului
+-daca in header-ul request-ului se specifica "content-type: 'application/json; charset=utf-8'", atunci Axios poate interpreta raspunsul request-ului folosind un JavaScript array, de aia poti printa cu "console.log(response)"
+
+Effect-hooks
+--------------------
+-used when fetching data from the server
+-a trebuit sa pun "npm run start" (in loc de "npm start") sa porneasca din Command Prompt
+-de regula, db.json se afla unde se afla si package.json
+-axios.then() practic inseamna event handler pentru momentul in care "data" vine inapoi de la server
+-get() face request-ul si then() se ocupa de raspunsul la request => then() = event handler
+-aparent functiona ciudat cand am rulat "npm run start" din Command Prompt, rezulta o ordine diferita a blocului:
+render 0 notes
+effect
+promise fulfilled
+render 3 notes
+-cand am rulat din Terminal din VSC a mers calumea
+-mai intai, se afiseaza "render 0 notes" pentru ca datele nu au ajuns inapoi de la server
+-imediat dupa primul render, se intra in functia "effect", se afiseaza "effect" si se face request-ul catre server
+-cand primim raspuns reusit de la server, se intra in then() si se populeaza array-ul original "notes" cu datele din "response.data"
+.de asemenea, se afiseaza "promise fulfilled"
+-se afiseaza "render 3 notes" pentru ca a fost apelat "setNotes()" care este o functie care modifica starea variabilei "notes" => se re-randeaza componenta <App> => se afiseaza "render 3 notes"
+-"setNotes()" este numita state-updating function
+-o state-updating function determina re-randarea componentei React in care se afla
+-cum se folosesc effect-hooks:
+useEffect(effect_hook, []);
+-useEffect() ia ca prim parametru un "effect-hook function"
+-al doilea parametru specifica cand va fi folosit effect_hook
+-de regula, un effect-hook function ruleaza la fiecare render complet, dar se poate specifica sa ruleze si altfel
+.de exemplu, vrem sa rulam effect-hook function doar la primul render => specificam "[]" ca al doilea parametru in useEffect()
+
+The development runtime environment
+--------------------
+-vezi 18e.png
+-"react app" este codul JavaScript ce ruleaza in browser
+-codul JavaScript este preluat din "react dev server"
+-"dev server" este o aplicatie ce porneste dupa ce dam comanda "npm start"
+-"dev server" transforma codul JavaScript intr-un cod ce poate fi interpretat de browser si de asemenea imbina codul scris in mai multe fisiere intr-unul singur
+-datele din aplicatie sunt preluate din "json-server" care ruleaza pe portul 3001
+-"json-server" preia datele din db.json
+-se observa ca tot ce tine de aplicatie ruleaza pe masina locala, adica pe localhost
+
+Exercises 2.11-2.14
+--------------------
+-se continua "Phone book app"
+-(?)
+
+d. Altering data in server
+----------------------------------------
+-REST = definesc o serie de constrangeri care trebuiesc indeplinite atunci cand creezi un serviciu web
+-constrangerile (conventiile web) la https://en.wikipedia.org/wiki/Representational_state_transfer#Applied_to_Web_services
+-daca un serviciu web se defineste ca fiind RESTful inseamna ca acesta poate interopera cu alte sisteme / servicii pe Internet
+
+REST
+--------------------
+-vorbind de terminologia REST, "notes" = resursa
+-individual data objects = resources, cu accent pe "data" => aceste obiecte trebuie sa contina date
+-fiecare resursa are o adresa asociata, un URL, eg. "/notes"
+-o singura "note" din "notes" ar trebui sa fie accesibila la URL-ul "/notes/3", unde 3 reprezinta id-ul acelei singure "note"
+-cu un request HTTP GET se aduc datele de la server, deci daca facem un GET request la "/notes/3" vom primi inapoi "note" cu id-ul 3
+-pentru a adauga un "note" vom face un request HTTP POST catre adresa "/notes"
+-textul acestui nou "note" este continut in corpul request-ului (body of the request)
+-daca vrem sa trimitem date catre json-server, acestea trebuie formatate ca un JSON si trebuie sa contina in header "application/json" la content-type
+
+Sending Data to the Server
+--------------------
+-e mai bine sa lasi server-ul sa puna un id cand trimiti un nou "note", pentru ca server-ul genereaza un id potrivit in functie de resursele (individual data objects) ce se afla deja pe server
+-in consola, sub "XHR POST" si "Request" vezi textul din noul "note"
+.acolo apare si "Request Payload"
+-se pot verifica header-ele din request-urile POST pentru corectitudinea operatiilor
+-noul "note" nu este afisat pe ecran pentru ca nu am facut update la componenta <App>
+-se observa ca acum concatenam datele primite ca raspuns...
+setNotes(notes.concat(response.data));
+...si nu datele din "noteObject":
+setNotes(notes.concat(noteObject));
+.tot aici, primeam eroare ca nu am specificat un "key" pentru noul "note"
+-reamintim ca concat() nu modifica array-ul "notes" original, ci creeaza unul nou => nu modifica in mod direct starea obiectului "notes"
+-e mai bine sa lasi server-ul sa puna un timestamp cand trimiti un nou "note", pentru a nu avea probleme daca ceasurile nu sunt sincronizate
+-se poate folosi Postman pentru a face debug pe request-urile POST care merg catre server
+
+Changing the importance of notes
+--------------------
+-am adaugat un buton pentru fiecare "note" sa o putem marca "important" sau "not important"
+-prin "toggleImportanceOf(id)" avem doar un "console.log('importance of note 3 needs to be toggled')"
+-daca vrem sa modificam un "note" de pe server avem doua optiuni:
+.cu PUT = replaces the entire note
+.cu PATCH = changes only some properties of the note
+-"==" face mai mult decat "===" pentru ca "==" incearca sa faca si o conversie de tip, la tipul membrului stang
+-vom modifica toggleImportanceOf(id) astfel:
+const toggleImportangeOf = (id) => {
+	console.log(`importance of ${id} needs to be toggled`);
+	const url = `http://localhost:3001/notes/${id}`;
+	const note = notes.find(n => n.id === id);
+	const changedNote = {
+		...note,
+		important: !note.important
+	}
+
+	axios
+		.put(url, changedNote)
+		.then((response) => {
+			setNotes(notes.map(
+				note => note.id !== id ? note : response.data
+			))
+		});
+}
+.nu a mers sa fac un event handler separat pentru ca aveam nevoie de "id", "id" pe care il luam din request-ul facut de axios.put(..)
+-"url" este unic pentru fiecare "note", in functie de id-ul pe care il are
+-cu find(), se cauta acel "note" caruia i se potriveste id-ul cu cel pe care il apasam noi in browser si il salvam ca un obiect in "const note"
+-actualizam "note" astfel:
+.copiem mai intai continutul din vechea "note" prin "...note"
+.schimbam proprietatea de "important"
+.creeam un obiect nou numit "changedNote" in care se reflecta acesta schimbare a proprietatii "important"
+-reamintim ca "...note" = object spread syntax = va copia toate proprietatile "note" intr-un nou obiect
+-si reamintim ca nu modificam in mod direct starea componentei => vom folosi un nou obiect "changedNote" in care sa se reflecte schimbarea
+-de retinut ca "changedNote" este un shallow copy => daca "note" continea referinte la alte obiecte => "changedNote" va contine aceleasi referinte
+-folosind map() vom crea un nou array de "notes" in care se va suprascrie, in functie de id, acea "note" care a fost modificata
+.adica vom copia continutul din vechiul array pana cand dam de acel id care ne intereseaza si atunci vom suprascrie pe vechiea "note" cu "changedNote"
+-din nou, map() creeaza un array nou => nu va modifica starea in mod direct
+
+Extracting communication with the backend into a separate module
+--------------------
+-fiecare dintre functiile din notes.js returneaza promises
+-GetAll() e singura care nu are parametri
+-trebuie sa folosesc Update() cu "id" si nu cu "url" ca parametru:
+NoteService.Update(id, changedNote)
+-folosind "response" primim inapoi intregul raspuns primit de la server: header-e, date, etc.
+-pe noi ne intereseaza doar datele din "response.data" din intregul obiect "response" => in notes.js vom modifica functiile astfel incat sa nu mai returneze promises, dar sa returneze "response.data"
+-metoda then() a unei promisiuni returneaza tot o promisiune
+-some reference legat de promises si promises chaining:
+https://github.com/getify/You-Dont-Know-JS/blob/1st-ed/async%20%26%20performance/ch3.md
+
+Cleaner syntax for defining object literals
+--------------------
+-mai jos, avem 2 metode echivalente de a defini un obiect:
+const name = 'Leevi';
+const age = 0;
+const person = {
+  name: name,
+  age: age
+};
+const person = { name, age };
+-"const person = { name, age }" merge, pentru ca proprietatile au acelasi nume cu variabila "const name" si "const age" definite mai sus
+-aceasta noua sintaxa merge doar pentru ca proprietatile impart acelasi nume cu variabilele
+
+Promises and errors
+--------------------
+-am modificat GetAll() pentru a returna o "note" care nu exista in server:
+const GetAll = () => {
+    const request = axios.get(baseURL)
+    const nonExisting = {
+        id: 10000,
+        content: 'This note is not saved to server',
+        date: '2019-05-30T17:30:31.098Z',
+        important: true,
+    }
+    return request.then(response => response.data.concat(nonExisting))
+}
+-cand un request da fail => promise este "rejected"
+-daca se face un request catre aceasta "note" => eroare 404 => NOT FOUND
+-trebuie sa scriem cod care sa trateze situatia in care starea unei promise este "rejected"
+-adaugam in metoda then() un callback, care sa trateze cazul in care primim o eroare (inseamna ca promise a fost "rejected")
+-sau, in loc de callback, folosim un bloc catch():
+..
+.catch(error => {
+	alert(`The note "${note.content}" was already deleted from the server.`);
+	console.log('error:', error);
+	setNotes(notes.filter(
+		n => n.id !== id
+	))
+})
+-blocul catch() se pune mai jos in promise chain
+-blocul catch() este apelat doar daca undeva in promise chain a aparut o eroare si acea promise a devenit "rejected"
+-nu se recomanda crearea de pop-up alerts in aplicatiile mai serioase
+-cu filter() vom afisa toate "notes" mai putin aceea care nu exista efectiv pe server
+.filter() returneaza un array nou, continand acele elemente din array-ul primit ca parametru, pentru care rezultatul expresiei logice este "true"
+
+Exercises 2.15.-2.18
+--------------------
+-se continua "Phone book app"
+-(?)
+
+e. Adding styles to React apps
+----------------------------------------
+-
+
+Improved error message
+--------------------
+Inline styles
+--------------------
+Exercises 2.19.-2.20
+--------------------
+-se continua "Phone book app"
+-(?)
+
+--------------------Part 1, Introduction to React--------------------
+
+a. Introduction to React
 ----------------------------------------
 npx create-react-app in_this_folder
 -create-react-app = se compileaza automat la salvare
@@ -63,7 +532,7 @@ Exercises 1.1, 1.2:
 rm -rf .git = pentru ca create-react-app face ca proiectul sa fie si un repo
 -a trebuit sa fac un array pentru props pentru a il folosi precum voia cerinta 1.2
 
-JavaScript
+b. JavaScript
 ----------------------------------------
 -transpilation = cod nou de JavaScript tradus in cod vechi care e compatibil cu toate browser-ele
 -transpilation se face cu Babel si se face automat in React cu create-react-app
@@ -201,7 +670,7 @@ avg(2, 3, 4, 5);
 -este asemanator cu acel obiect global, dar acest obiect nu poate fi accesat direct din cod sau iterat peste proprietatile acestuia
 -aceste 'scope' objects formeaza "scope chain" si impreuna cu functiile in care au fost create (sau care au determinat la creearea lor) formeaza "closures"
 
-Component state, event handlers
+c. Component state, event handlers
 ----------------------------------------
 Component helper functions
 --------------------
@@ -272,7 +741,7 @@ Refactoring the components
 --------------------
 -in VSC, shortcut e F2
 
-A more complex state, debugging React apps
+d. A more complex state, debugging React apps
 ----------------------------------------
 Complex state
 --------------------
@@ -395,14 +864,13 @@ Exercises 1.6-1.14:
 -de ce nu a mers sa fac o functie giveFeedback() care sa primeasca pe rand ca parametru pe good, bad si neutral (?)
 1.11
 -vezi (https://github.com/facebook/react/issues/5652#issuecomment-164175731) explicatie pentru ce <tr> si <td> trebuie incluse intr-un <tbody>..</tbody>
-11.13
--aici am ramas (?)
 11.14
 -a trebuit sa pun ... in Math.max() sa imi calculeze maximul din array:
 const maxVotes = Math.max(...anecdotesVotes);
 -nu iti da eroare daca nu se potriveste atributul din componenta cu numele cu care il apelezi din <App />, gen 'anecodote' diferit de 'anecdote' dar nu da eroare
+-mi-a ramas un mic bug: atunci cand votez o anecdota, in 'Anecdote with most views' ramane scorul cu unul in minus, adica ramane in urma, chiar daca actualizez starea obiectului la fiecare apasare de buton (?)
 
---------------------Part 0--------------------
+--------------------Part 0, Fundamentals of Web apps--------------------
 
 Fundamentals of Web apps
 ----------------------------------------
