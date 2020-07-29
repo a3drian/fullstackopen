@@ -1,6 +1,347 @@
 
 Full Stack Open
 
+--------------------Part 3, Programming a server with NodeJS and Express--------------------
+
+a. Node.js and Express
+----------------------------------------
+-vom vorbi despre backend
+-in backend, majoritatea caracteristicilor JavaScript sunt functionale, deci nu mai trebuie transpilat codul de exemplu, cu babel
+-sub "main" se defineste the entry point of the application, la noi index.js
+-practic "npm start" si "node index.js" sunt echivalente
+-se folosesc teste in aplicatie cu "npm test"
+
+Simple web server
+--------------------
+-momentan, server-ul returneaza acelasi raspuns indiferent de adresa URL, care poate fi: "http://localhost:3001/foo/bar", "http://localhost:4678", etc.
+-"const http = require('http')" echivalent cu "import http from 'http'"
+-modulul "http" este modulul built-in Node care creeaza un web-server
+-Node foloseste modulele CommonJS, pentru ca nu suporta mereu ultimele functionalitati din modulele ES6
+-prin "app.listen(3001)" se face practic binding intre web-server si un port, unde "app" este un server http creat prin metoda createServer()
+.createServer() creeaza un web-server
+-se defineste si un event handler pentru request-urile trimise catre server
+-event handler-ul trimite un raspuns sub forma unor "notes" formatate JSON
+-Content-Type s-a schimbat din "text/plain" in "application/json"
+
+Express
+--------------------
+-instalam Express cu "npm install express --save"
+-Express are nevoie de alte module, acele module au nevoie de alte module samd, asa numitele dependinte tranzitive
+-cu "npm update" actualizam dependintele
+-cu "npm install" se instaleaza dependintele daca nu avem folder-ul node_modules
+-vorbeste putin de cum functioneaza versionarea "^4.17.1"
+
+Web and express
+--------------------
+const express = require('express')
+const app = express()
+-"express" este de data asta o functie
+-prin...
+app.get('/', (req, res) => {
+    res.send('<h1>Hello World!</h1>')
+})
+...se defineste ruta catre adresa "localhost:3001"
+-se pot defini si alte rute pentru request-uri de tip GET cu metoda get()
+-"req" = primul parametru, contine toate informatiile legate de request-ul HTTP
+-"res" = al doilea parametru, continte toate informatiile legate despre cum vom trata raspunsul la request-ul HTTP definit prin variabila "req" de mai sus
+-noi vom raspunde la request prin metoda "send()" in care vom trimite un element <h1> si un mesaj
+-status code va fi default 200 si pentru ca am trimis un String => Content-Type este default "text/html"
+-putem raspunde si cu metoda "json()" a parametrului "res"
+-prin json() vom intoarce lista de "notes"
+-de data asta, content-type va fi "application/json", dar cu acelasi status code 200
+-nu mai avem nevoie de metoda stringify(), pentru ca transformarea din array in text formatat JSON se face automat
+-de retinut ca un text formatat JSON nu este altceva decat un String:
+const person = {
+	name: "Arto",
+	age: 35
+}
+const json = JSON.stringify(person)
+-"person" este de fapt "'{"name":"Arto","age":35}"
+-daca scrii in Command Prompt "node", poti scrie si testa, linie cu linie, comenzi JavaScript
+
+nodemon
+--------------------
+-pentru aplicatie (si nu global) il instalam cu "npm install --save-dev nodemon"
+-nodemon se va instala sub "devDependencies"
+-in React, daca dai "npm run start" in Terminal, browser-ul da refresh automat cand detecteaza schimbari in codul sursa
+.in React ai si "hot reload" care da refresh automat la browser
+-cu nodemon putem obtine acelasi efect, dar trebuie totusi sa dam refresh manual in browser
+-aplicatia nu are nevoie de modulele de sub "devDependencies" pentru a rula in production mode, ci doar in development mode
+-daca adaugam "dev": "nodemon index.js" sub "scripts", atunci putem rula "npm run dev" care va porni server-ul
+-se observa ca trebuie sa specificam "run" in comanda
+.pentru "start" si "test" nu aveam nevoie de "run"
+
+REST
+--------------------
+-singular things = "notes" = resources
+-fiecare resursa are asociata o adresa URL care este o adresa unica spre aceasta resursa
+-se practica folosirea tipului resursei si id-ul acesteia pentru a crea o adresa unica,
+"www.example.com/api/notes/10", daca presupunem ca adresa radacina este "www.example.com/api"
+-la noi tipul este "notes" si id-ul este 10
+-intreaga colectie de "notes" se gaseste la o adresa in care nu se pune id:
+"www.example.com/api/notes/"
+-un tabel cu verbele ce pot fi folosite in request-uri HTPP, vezi si tabel-verbe.png:
+URL			verb 	functionality
+------------------------------------------------------------------------------------
+notes/10 	GET 	fetches a single resource
+notes 		GET 	fetches all resources in the collection
+notes 		POST 	creates a new resource based on the request data
+notes/10 	DELETE 	removes the identified resource
+notes/10 	PUT 	replaces the entire identified resource with the request data
+notes/10 	PATCH 	replaces a part of the identified resource with the request data
+-GET = returneaza ori o singura resursa deja existenta ori toate resursele deja existente, vezi tabelul de mai sus
+-POST = creezi o noua resursa
+-DELETE = stergi o anumita resursa deja existenta
+-PATCH = inlocuiesti doar anumite proprietati dintr-o resursa deja existenta
+-PUT = inlocuiesti cu totul o resursa deja existenta
+-in gandirea REST, prin tabelul de mai sus definim un "uniform interface", adica o interfata care permite sistemelor sa inter-opereze intre ele
+
+Fetching a single resource
+--------------------
+-am folosit ":" intr-o ruta pentru a indica Express ca este vorba de un parametru:
+app.get('/api/notes/:id', (request, response) => {..}
+.observa ":id" de mai sus
+-aceasta ruta va fi event handler-ul pentru toate request-urile GET la adresele de genul: "api/notes/1", "api/notes/12", etc.
+.desigur, "id" poate fi orice String, adica "api/notes/aditza"
+-se observa ca am accesat parametrul "id" prin intermediul obiectului "request" si proprietatea acestuia "params":
+const id = request.params.id;
+-ce se intampla in aceasta ruta este ca se face un request la adresa sa zicem, "api/notes/12"
+-acel "12" este preluat prin obiectul "request" si salvat in constanta "id" => const id = request.params.id;
+-cu acea constanta vom cauta pe server acea "note" care se potriveste id-ului
+-cand o vom gasi o vom trimite ca raspuns prin "response.json(note)", adica un text formatat JSON
+-se intoarce ca raspuns o pagina blank => debug
+-am folosit...
+console.log(note.id, typeof note.id, id, typeof id, note.id === id)
+...si prin "typeof" ne-am dat seama ca se compara un "id" de tip Number cu un "id" de tip "String" si nu gaseste astfel o "note" => "undefined"
+-retinem ca daca vrem mai mult de o instructiune intr-o functie cu "=>" trebuie sa folosim "{}"
+-de asemenea, avem nevoie acum de "return note" pentru ca nu va mai fi recunoscut obiectul "note":
+app.get('/api/notes/:id', (request, response) => {
+    const id = Number(request.params.id)
+    console.log('id:', id)
+	
+    const note = notes.find(note => {
+        console.log(note.id, typeof note.id, id, typeof id, note.id === id);
+        return note.id === id;
+    })
+	
+    console.log('note:', note)
+    response.json(note);
+})
+-in plus, deoarece "notes" este "undefined" atunci cand nu se gaseste un "note" cu acel "id" vom primi status code 200 in loc de 404
+.adica practic nu a aparut eroare si atunci totul e in regula => status code 200
+-poti verifica faptul ca de la server nu ai primit raspuns daca te uiti la "Content-Length" in "Headers", sub "Network": daca e 0, atunci server-ul a trimis un raspuns gol
+-daca folosim "end()" ca raspuns inseamna ca am raspuns la request fara a trimite date
+-obiectul "note" nu este acelasi ca cel folosit in return, vezi scope-of-note.png (?):
+-prin "return note => note.id === id;" tu practic creezi o noua functie, diferita de "find()" si deci rezulta ca obiectele numite "note" nu mai corespund
+."return note => note.id === id;" este echivalent cu...
+return note => {
+	note.id === id;
+}
+...si se observa ca este o functie noua care ia ca parametru un obiect "note" diferit de cel definit in "notes.find(note => {..})"
+-"undefined" este falsy
+-toate obiectele din JavaScript sunt truthy => if(object){..} => returneaza true doar daca nu este "undefined" sau "null"
+-doarece lucram cu REST APIs, este suficient sa trimitem ca raspuns status code 404, fara a fi nevoie de a afisa efectiv ceva in pagina web
+
+Deleting resources
+--------------------
+-vom folsi verbul DELETE in loc de GET
+-de asemenea, vom folosi filter() ca sa nu afisam acea "note" care tocmai a fost stearsa
+-raspundem cu status code 204 => NO CONTENT => raspunsul va fi fara date
+-daca se incearca stergerea unei "note" care nu exista => status code 204 sau 404
+-vom folosi tot 204 daca se incearca stergerea unei "note" care nu exista
+-doar accesand adresa "http://localhost:3001/api/notes/2" nu inseamna ca se va sterge "note" cu id-ul 2
+-trebuie sa folosim Postman ca sa trimitem un request de tip DELETE, pentru ca browser-ul face unul default de GET
+
+Postman
+--------------------
+-o alternativa este "curl"
+-tot ce trebuie sa facem este sa luam adresa si sa selectem ca request unul de tip DELETE
+-rezultatul in Postman ar trebui sa fie cel din cod, adica sa returneze status code 204
+
+The Visual Studio Code REST client
+--------------------
+-practic acelasi lucru cu Postman
+-folosim fisiere cu extensia .rest, de exemplu get_all_notes.rest in care scriem:
+GET http://localhost:3001/api/notes
+-apare butonul "Send Request" in acest fisier .rest
+-raspunsul apare intr-un tab in VSC
+
+Receiving data
+--------------------
+-avem nevoie de un request POST si de json-parser din Express
+-json-parser ne ajuta sa accesam continutul din corpul request-ului POST prin "request.body"
+-trebuie sa trimitem la adresa "http://localhost:3001/api/notes" un "note" care sa fie inclus in corpul request-ului
+-fara acel json-parser, acea proprietate "body" ar fi "undefined"
+-json-parser functioneaza astfel:
+.ia datele JSON dintr-un request
+.transforma datele intr-un obiect JavaScript
+.ataseaza obiectul la proprietatea "body" a obiectului "request" inainte sa se apelez route handler-ul pentru request
+-in Postman, daca vrem sa trimitem un "note" trebuie sa umplem si tab-ul "Body" cu, de ex.:
+{
+	"content": "Postman is nice",
+	"important": true
+}
+-de asemenea, punem "raw" si "JSON" ca tipul textului
+-am pus "api/notes" in loc de "/api/notes" ca adresa si imi dadea 404 NOT FOUND
+-daca punem Content-Type "text/plain" in loc de in loc sa primim inapoi...
+{
+	"content": "Postman is nice",
+	"important": true
+}
+...vom primi "{}" adica un obiect gol, pentru ca server-ul nu poate interpreta corect request-ul si nici macar nu incearca sa isi dea seama ca tu ai vrut de fapt un request JSON
+-putem folosi si REST Client din VSC
+-fata de Postman, e mai simplu sa distribui aceste request-uri catre alti membri ai echipei, pentru ca sunt toate in folder-ul "request" din directorul aplicatiei si pot fi incluse in repo
+-ca sidenote, poti sa verifica ca s-a trimis Content-Type corect daca printezi:
+console.log(request.headers);
+-de asemenea, poti verifica ce header-e s-au trimis in request daca folosesti metoda get() pe obiectul request:
+req.get('Content-Type');
+-codul de sus intoarce continutul header-ului "Content-Type"
+-daca vrei sa folosesti REST Client, nu pune spatiu intre verbul de request si header...
+POST http://localhost:3001/api/notes
+
+Content-Type: application/json
+...ci in schimb scrie:
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+-astfel, se evita problemele in care vei primi ca raspuns "{}" adica un obiect gol, dar si alte probleme legate de setarea header-ului necorespunzator
+-daca header-ul "Content-Type" este setat necorespunzator, atunci server-ul nu stie sa interpreteze corect request-ul => {}
+-mai intai am verificat ca server-ul primeste datele JSON, acum terminam aplication logic
+-trebuie sa fortam utilizatorii sa trimita un "note" care contine ceva, adica sa nu trimita un text gol
+-daca trimit un text gol => status code 400
+-daca nu am apela "return" atunci cand nu se trimite continut in proprietatea "content" a unui "note", nu se iese din functie si atunci se va salva pe server o "note" care este corupta => daca nu se trimite continut in proprietatea "content" => return si eroare
+-eroarea va fi status code 400 BAD REQUEST, adica clientul nu si-a facut treaba si nu a trimis continutul care trebuie pentru "note" pentru ca aceasta sa poata fi salvata pe server
+-vom suprascrie data la care a fost scrisa "note" pentru ca nu stim cu siguranta ca ceasurile server-ului si clientului sunt sincronizate => lasam pe server sa creeze el o data
+-daca lipseste proprietatea "important" => false
+.cand "important" este false, atunci expresia...
+body.important || false
+...se evalueaza la false
+-"? Math.max(...notes.map(n => n.id))" inseamna ca:
+.se creeaza un map (un array) cu toate id-urile "note"-urilor deja existente
+.practic se creaaza un array de id-uri "[1, 2, 3, 5, 6, 7]"
+.se cauta maximul dintre aceste id-uri, dar nu se poate pentru ca Math.max() vrea ca parametru numere individuale si nu direct un array
+.de aceea folosim object spread syntax "...notes" => va transforma array-ul in numere individuale care pot fi trimise ca parametru: "1 2 3 5 6 7"
+
+Exercises 3.1-3.6
+--------------------
+-se implementeaza "Phonebook backend"
+-(?)
+
+About HTTP request types
+--------------------
+-tipurile de request: safe si idempotente
+-GET si HEAD ar trebui sa fie safe
+-safe = ca nu aduc nicio modificare asupra server-ului, nu aduc nicio modificare asupra bazei de date stocata pe server
+-GET si HEAD trebuie doar sa aduca date de pe server
+-cand se folosesc GET si HEAD, server-ul returneaza un "raspuns"
+-cu GET se aduc resurse de pe server, header-e si status codes din acel raspuns
+-cu HEAD se aduc doar header-ele si status code din header-ul acelui raspuns
+-nu se garanteaza ca GET si HEAD sunt safe, dar daca aderam la principiile REST (RESTful principles), atunci in aplicatia noastra, aceste verbe nu trebuie sa aduca nicio modificare asupra bazei de date sau a server-ului
+-toate verbele in afara de POST trebuie sa fie idempotente
+-idempotente = de cate ori faci acelasi request catre server, acelasi raspuns vei primi
+.practic, daca faci un request sau N request-uri => tot acelasi raspuns vei primi de la server
+-nu se garanteaza idempotenta, dar daca aderam la principiile REST, atunci in aplicatia noastra GET, HEAD, PUT si DELETE trebuie folosite in asa maniera incat de fiecare data si ori de cate ori sunt apelate, ele sa returneze acelasi raspuns de la server
+-POST nu este nici safe nici idempotent => aduce modificari asupra bazei de date si de asemenea "notes" se va modifica la fiecare adaugare de un nou "note", adica vei primi alt raspuns la fiecare folosire de POST
+
+Middleware
+--------------------
+-json-parser este un middleware
+-middleware = functie care poate fi folosita pentru a trata obiectele "request" si "response"
+.middleware = functie folosita pentru a trata raspunsul de la server si catre server
+-functiile sunt apelate in ordinea in care sunt scrise, adica in ordinea in care folosim metoda "app.use()" cu ele => "unknownEndpoint" trebuie folosit cu use() la sfarsit doar, inainte de a incepe sa facem bind intre port si web-server
+-de exemplu, json-parser trebuie folosit inainte de a folosi "requestLogger" pentru ca altfel nu se initializeaza proprietate "body" din obiectul "request" => "requestLogger" nu are ce sa afiseze in consola
+-de regula, un middleware ia 3 parametri:
+const requestLogger = (request, response, next) => {
+	console.log('Method:', request.method);
+	console.log('Path:  ', request.path);
+	console.log('Body:  ', request.body);
+	console.log('---');
+	next();
+}
+-prin "next()" din ultima linie se da control urmatorului middleware din pipeline
+.practic, in parametrul "next" este primita o functie care va fi apelata pentru a trece la urmatorul middleware din pipeline
+-daca vrem ca middleware sa se apeleze inainte de event handler-ele pentru rute, trebuie sa le folosim cu "use()" inainte de a defini rutele
+.putem folosi middleware si dupa ce am definit rutele, dar practic asta inseamna ca ele vor fi apelate doar daca nu avem route specificate pentru a trata un anumit request
+.de exemplu, "unknownEndpoint", care trateaza request-uri trimise la adrese URL care nu exista
+-de aceea, "unknownEndpoint" este ultimul, pentru ca de regula, astfel de middleware se definesc dupa ce am definit rutele (adrese URL care chiar exista) si in caz ca utilizatorul foloseste una nespecificata si incorecta, atunci sa ii putem trimite un status code 404
+-aveam un bug in care nu se afisau "notes" adaugate pentru ca nu atribuiam rezultatul in variabila "notes" astfel...
+notes = notes.concat(note);
+...ci doar puneam "notes.concat(note);" fara sa actualizez pe "notes"
+
+Exercises 3.7-3.8
+--------------------
+-se continua "Phonebook backend"
+-(?)
+
+b. Deploying app to internet
+----------------------------------------
+Same origin policy and CORS
+--------------------
+Application to the Internet
+--------------------
+Frontend production build
+--------------------
+Serving static files from the backend
+--------------------
+Streamlining deploying of the frontend
+--------------------
+Proxy
+--------------------
+Exercises 3.9-3.11
+--------------------
+-(?)
+
+c. Saving data to MongoDB
+----------------------------------------
+Debugging Node applications
+--------------------
+MongoDB
+--------------------
+Schema
+--------------------
+Creating and saving objects
+--------------------
+Fetching objects from the database
+--------------------
+Exercise 3.12
+--------------------
+-(?)
+Backend connected to a database
+--------------------
+Database configuration into its own module
+--------------------
+Using database in route handlers
+--------------------
+Verifying frontend and backend integration
+--------------------
+Exercises 3.13-3.14
+--------------------
+Error handling
+--------------------
+Moving error handling into middleware
+--------------------
+The order of middleware loading
+--------------------
+Other operations
+--------------------
+Exercises 3.15-3.18
+--------------------
+-(?)
+
+d. Validation and ESLint
+----------------------------------------
+Promise chaining
+--------------------
+Deploying the database backend to production
+--------------------
+Exercises 3.19-3.21
+--------------------
+-(?)
+Lint
+--------------------
+Exercise 3.22
+--------------------
+-(?)
+
 --------------------Part 2, Communicating with server--------------------
 
 a. Rendering a collection, modules
@@ -22,6 +363,8 @@ JavaScript Arrays
 --------------------
 -vom folosi find(), filter(), map()
 
+Functional Programming in JavaScript pe YouTube
+--------------------
 Higher-order functions - Part 1 of Functional Programming in JavaScript
 (https://www.youtube.com/watch?v=BMUiFMZr7vk&list=PL0zVEGEvSaeEd9hlmCXrk5yUyqUag-n84&index=1)
 -permit scrierea de cod mai reutilizabil
@@ -90,6 +433,24 @@ const fs = require('fs');
         return customers;
     }, {});
 -se observa "{}" de la sfarsit
+
+Currying - Part 6 of Functional Programming in JavaScript
+(https://www.youtube.com/watch?v=iZLP4qOwY8I&list=PL0zVEGEvSaeEd9hlmCXrk5yUyqUag-n84&index=6)
+let dragon =
+	name =>
+		size =>
+			element =>
+				name + ' is a ' +
+				size + ' dragon that breathes ' +
+				element + '!'
+let output = dragon('Karo')('large')('ice')
+console.log(output)
+-dragon() = a currying function
+-it's basically a function that returns a function that returns a function until it returns an actual value
+-we call dragon() with "Karo" which will return a function which will be called with "large" which will return a function which will be called with "ice" which will finally return an actual value which is a String
+-"Karo" would be the "name" parameter, "large" would be the "size" parameter and "ice" would be the "element" parameter
+-function currying allows modularity and reusability because it allows functions to be easily chained together
+-modularity because at any one time you can replace the a function within a chain with a new, improved / different one
 
 Event handlers revisited
 --------------------
@@ -451,6 +812,7 @@ const GetAll = () => {
 -nu se recomanda crearea de pop-up alerts in aplicatiile mai serioase
 -cu filter() vom afisa toate "notes" mai putin aceea care nu exista efectiv pe server
 .filter() returneaza un array nou, continand acele elemente din array-ul primit ca parametru, pentru care rezultatul expresiei logice este "true"
+-la fiecare rulare va aparea acel "note" care nu exista pe server, dar va fi filtrata odata ce se apasa butonul de "important" pe ea
 
 Exercises 2.15.-2.18
 --------------------
@@ -459,12 +821,38 @@ Exercises 2.15.-2.18
 
 e. Adding styles to React apps
 ----------------------------------------
--
+-"import './index.css'" merge pentru ca React vine deja cu un .css default
+-regulile din CSS se compun din selectors si declarations:
+h1 {
+	color: green;
+	font-style: italic;
+}
+-"h1" este selector si "color: green" e declaration
+-e mai bine sa folosim "class selectors" pentru a nu selecta toate heading-urile de tip <h1>, de exemplu
+-desi normal unui element ii poti adauga atributul "class", in "return(..)" dintr-o componenta React, se foloseste "className"
 
 Improved error message
 --------------------
+-ar trebui sa definim initial pe "errorMessage" cu null ca sa nu apara un <div> gol sub <h1>:
+const [errorMessage, setErrorMessage] = useState(null);
+-cand se creeaza o noua componenta React, trebuie folosit "import React from 'react'" si trebuie sa exportam acea componenta pentru a putea fi folosita in alte fisiere
+
 Inline styles
 --------------------
+-"inline styles" se refera la a atribuirea de cod care sa cosmetizez componentele React prin atributul "style":
+const divStyle = {
+	color: 'blue',
+	backgroundImage: 'url(' + imgUrl + ')',
+};
+function HelloWorldComponent() {
+	return <div style={divStyle}>Hello World!</div>;
+}
+-se observa ca are alta sintaxa fata de codul CSS si ca se foloseste camelCase in loc de kebab-case (cu "-")
+-inline styles nu pot fi folosite direct cu "pseudo-clase"
+-spre deosebire de scoala clasica in care se prefera separarea de cod HTML, de cod CSS si cod JavaScript, in React se doreste crearea de componente care sa fie utilizabile de sine statator
+.de aceea, se permite includerea de cod care sa cosmetizeze componentele React pentru ca ele sa fie direct reutilizabile si in alte aplicatii
+-in React, o componenta are cod HTML care sa ii ofere structura si cod JavaScript care sa ii ofere functionalitate si cosmetizare, toate intr-un singur loc
+
 Exercises 2.19.-2.20
 --------------------
 -se continua "Phone book app"

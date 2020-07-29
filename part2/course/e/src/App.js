@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import Note from './components/Note'
 import NoteService from './services/notes'
+import Notification from './components/Notification'
+import Footer from './components/Footer'
 
 // vom folosi NoteService => acolo avem 'axios'
 // import axios from 'axios'
@@ -21,7 +23,10 @@ const App = () => {
         ? notes
         : notes.filter(note => note.important === true)
 
-    // using effect-hooks to fetch data from serer
+    // Improved error message
+    const [errorMessage, setErrorMessage] = useState(null);
+
+    // Using effect-hooks to fetch data from serer
     const handleResponse = (response) => {
         console.log('promise fulfilled');
         setNotes(response.data);
@@ -85,6 +90,22 @@ const App = () => {
         //         ))
         //     })
 
+        // vom folosi noua componenta Notification
+        // NoteService
+        //     .Update(id, changedNote)
+        //     .then(returnedData => {
+        //         setNotes(notes.map(
+        //             note => note.id !== id ? note : returnedData
+        //         ))
+        //     })
+        //     .catch(error => {
+        //         console.log('error:', error);
+        //         alert(`The note "${note.content}" was already deleted from the server.`);
+        //         setNotes(notes.filter(
+        //             n => n.id !== id
+        //         ))
+        //     })
+
         NoteService
             .Update(id, changedNote)
             .then(returnedData => {
@@ -93,8 +114,11 @@ const App = () => {
                 ))
             })
             .catch(error => {
-                alert(`The note "${note.content}" was already deleted from the server.`);
                 console.log('error:', error);
+                setErrorMessage(`The note "${note.content}" was already deleted from the server.`);
+                setTimeout(() => {
+                    setErrorMessage(null)
+                }, 3000);
                 setNotes(notes.filter(
                     n => n.id !== id
                 ))
@@ -158,6 +182,8 @@ const App = () => {
         <div>
             <h1> Notes </h1>
 
+            <Notification message={errorMessage} />
+
             {/* <ul>
                 {notes.map(note =>
                     <Note key={note.id} note={note} />
@@ -190,6 +216,8 @@ const App = () => {
                     save
                 </button>
             </form>
+
+            <Footer />
 
         </div>
     )

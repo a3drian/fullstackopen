@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './App'
 
+import './index.css'
+
 // Axios and promises
 // import axios from 'axios' // moved to App.js for effect-hooks
 
