@@ -274,18 +274,93 @@ Exercises 3.7-3.8
 
 b. Deploying app to internet
 ----------------------------------------
+-am preluat din (part2, e) si am folosit "npm install" ca sa instalez dependintele pentru React
+-am schimbat "baseURL"
+
 Same origin policy and CORS
 --------------------
+-CORS = Cross-Origin Resource Sharing
+-desi putem accesa "http://localhost:3001/api/notes", partea de backend, din browser sau Postman, nu o putem accesa din frontend, din React, pentru ca primim eroarea: "Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://localhost:3001/api/notes. (Reason: CORS request did not succeed)."
+-React = frontend = la portul 3000
+-backend = la portul 3001
+-putem accesa direct din browser adresa "http://localhost:3001/api/notes", dar nu o putem accesa din intermediul aplicatiei noastre, care este pe portul 3000
+-deoarece aplicatia este pe portul 3000 si server-ul este pe portul 3001 => nu au aceeasi origine => cele 2 nu pot comunica
+.nu pot comunica, pentru ca default este ca o aplicatie JavaScript ce ruleaza in browser poate comunica cu un server cu care imparte aceeasi origine
+-scheme/host/port = daca toate acestea 3 coincid => atunci, despre 2 URL-uri se spune ca au aceeasi origine
+-pentru a permite request-uri de la alte origini, instalam middleware "cors" in backend...
+npm install cors --save
+...si instructiunea in index.js din backend:
+app.use(cors())
+-dadea eroare cu "Module not found" pentru cors pentru ca il instalasem in frontend si trebuia in backend
+
 Application to the Internet
 --------------------
+-o aplicatie basic in Heroku se face cu "heroku create"
+-aplicatia se pune pe Heroku cu "git push heroku master"
+-in Heroku, un fisier "Procfile", simplu, fara extensie, in folder-ul radacina, ii spune cum sa porneasca aplicatia, la noi prin "web: node index.js"
+-vom defini o "environment variable" pentru PORT sau folosim 3001 daca nu se gaseste, in index.js
+-cu comanda "heroku logs -t", Heroku printeaza logs in consola
+-daca am scris cod in alt branch decat "master", folosim "git push heroku HEAD:master" sau "git push heroku HEAD:master --force"
+-am pus server-ul (backend) pe Heroku la "https://a3drian.herokuapp.com/api/notes/"
+
 Frontend production build
 --------------------
+-aici vom pune aplicatia React pe Internet
+-cand React e in development mode, printeaza erori in consola, da refresh la browser la orice modificare, etc => daca vrem sa facem deploy => production build version of the application
+-versiunea de productie se face cu "npm run build" in folder-ul radacina al aplicatiei
+-dupa rularea "npm run build" se creeaza un folder "build"
+-in "build" avem un singur fisier .html (index.html) si directorul "static"
+-in "static" sunt salvate bucatile de cod JavaScript, care insumate => aplicatia React => toate bucatile de cod insumate, impreuna cu tot codul din dependintele proiectului => minimizat intr-un singur fisier => acel singur fisier = aplicatia noastra React
+
 Serving static files from the backend
 --------------------
+-putem copia acest folder "build" in folder-ul radacina din repo "a3drian" de pe Heroku si apoi sa configuram backend astfel incat sa afiseze pagina principala din frontend, acel "build/index.html", cu pasii de mai jos
+-pentru ca "express" sa afiseze continut static, adica fisierele din folder-ul "static" (cod JavaScript, dar si index.html, de exemplu) al aplicatiei, avem nevoie de middleware "static"...
+npm i static -s
+...pe care il folosim:
+app.use(express.static('build'))
+-acum, daca "express" primeste un GET request, mai intai cauta daca exista un asemenea fisier in "build" si daca il gaseste, il afiseaza
+-mai mult, request-uri la "/index.html" sau direct la "/" => tratate de frontend
+-request-uri la "/api/notes" => tratate de frontend
+-deoarece frontend si backend se afla la aceeasi adresa "https://a3drian.herokuapp.com", putem folosi o cale relativa (relative path) pentru "baseURL":
+const baseUrl = '/api/notes'
+-acum, aplicatia este vizibila de la adresa de backend, adica de la portul 3001
+.aplicatia functioneaza ca un "single-page-app", cum am vazut la inceputul cursului (part 0)
+-in fisierul "index.html" din "build", avem o instructiune care cere sa se aduca un .css si 2 instructiuni care sa ceara codul JavaScript al aplicatiei, al aplicatiei React propriu-zise
+-aplicatia aduce "notes" de la "http://localhost:3001/api/notes" si le afiseaza pe ecran, vezi 29ea.png si "Network" in consola
+
 Streamlining deploying of the frontend
 --------------------
+-vom pune...
+"build:ui": "rm -rf build && cd ../../osa2/materiaali/notes-new && npm run build --prod && cp -r build ../../../osa3/notes-backend/",
+"deploy": "git push heroku master",
+"deploy:full": "npm run build:ui && git add . && git commit -m uibuild && npm run deploy",    
+"logs:prod": "heroku logs --tail"
+...in package.json pentru backend, sub "scripts"
+-caile sunt relative si trebuie modificate pentru aplicatia noastra
+npm run build:ui = construieste frontend si copiaza folder-ul "build" in folder-ul care contine backend
+npm run deploy = face deploy pe Heroku
+npm run logs:prod = afiseaza logs din Heroku
+-am setat "bash.exe" ca sa execute script-uri npm astfel:
+npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
+
 Proxy
 --------------------
+-cand am schimbat adresa din variabila "baseURL" intr-una relativa, "api/notes", adresa va indica spre portul 3000, pentru ca pe portul 3000 este configurata aplicatia sa ruleze
+.cu alte cuvinte, "api/notes" se transforma in "localhost:3000/api/notes" si nu mai indica la "localhost:3001/api/notes" unde este de fapt server-ul
+-daca aplicatia a fost creata cu "create-react-app", putem adauga in package.json al aplicatiei React...
+"proxy": "http://localhost:3001"
+...iar in urma acestui script, aplicatia React in modul development va functiona ca un proxy
+.proxy are effect doar cand esti in development mode cu aplicatia React, adica "npm start"
+-pentru ca functioneaza ca un proxy, atunci cand aplicatia React face request-uri care nu tin de aplicatie, de exemplu alte instructiuni decat cele care aduc .css sau cele 2 instructiuni care sa ceara codul JavaScript al aplicatiei, catre adresa "localhost:3000", request-urile vor fi trimise catre server, server care exista la adresa "localhost:3001"
+.cu alte cuvinte, orice request care nu tine de aplicatie, nu tine de cum arata aplicatia sau de logica, este trimis catre server
+.practic, prin proxy, toate request-urile necunoscute in modul development vor fi trimise catre server-ul de la portul 3001
+-acum, daca facem deploy pe Heroku, ar trebui ca in loc de "Hello, aditza" sa vedem exact index.html din frontend
+.nu uitam sa actualizam index.js din backend
+-felul in care noi punem aplicatia pe internet este cumbersome si este foarte dificil sa cream un "development pipeline" automat
+-codul pentru aplicatie este in branch "3-3":
+https://github.com/fullstack-hy2020/part3-notes-backend/blob/part3-3/
+
 Exercises 3.9-3.11
 --------------------
 -(?)
@@ -1331,7 +1406,7 @@ JavaScript-libraries
 
 Full stack -web development
 --------------------
--folosim JavaScript pe toate stivele front-end, back-end, database stack
+-folosim JavaScript pe toate stivele frontend, backend, database stack
 
 JavaScript fatigue
 --------------------
