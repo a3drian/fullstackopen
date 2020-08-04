@@ -358,48 +358,288 @@ Proxy
 -acum, daca facem deploy pe Heroku, ar trebui ca in loc de "Hello, aditza" sa vedem exact index.html din frontend
 .nu uitam sa actualizam index.js din backend
 -felul in care noi punem aplicatia pe internet este cumbersome si este foarte dificil sa cream un "development pipeline" automat
+-se poate face un deploy la frontend ca o aplicatie de sine statatoare, vezi:
+https://github.com/mars/create-react-app-buildpack
 -codul pentru aplicatie este in branch "3-3":
 https://github.com/fullstack-hy2020/part3-notes-backend/blob/part3-3/
+-e un mic bug, daca dai pe "important" iti zice ce "note" a fost deja stearsa de pe server, ca la GetAllFail(), unde intentionat aveam un "note" inexistent (?)
 
 Exercises 3.9-3.11
 --------------------
+-se continua "Phonebook backend"
 -(?)
 
 c. Saving data to MongoDB
 ----------------------------------------
 Debugging Node applications
 --------------------
+-folosind keyword "debugger;"
+-in Command Prompt, poti folosi comanda "node --inspect index.js" si apoi deschide Chrome si "DevTools for Node.js"
+.tot aici, in "Sources" poti pune break points, poti vedea valorile variabilelor, executa alt cod JavaScript si poti vedea mesajele scrise cu "console.log()"
+-question everything = console.log, debugger, Postman, etc. peste toate, pentru ca de la toate pot aparea erori
+-the "Andon Cord" from Toyota = stop and fix principle
+
 MongoDB
 --------------------
+-Mongo nu este o baza de date relationala
+-Mongo is a document database, a NoSQL database
+-document database = toate informatiile despre o comanda sunt retinute intr-un singur loc
+.nu mai ai tabelul "Clienti", "Adrese", "Produs", etc. => un singur loc contine toate datele despre o comanda
+-Mongo documents:
+-documentele sunt salvate sub forma BSON = binary JSON
+-in documente se regasesc "field-and-value pairs":
+{
+	name: "adi",
+	..
+}
+-field = name, value = "adi"
+var mydoc = {
+               _id: ObjectId("5099803df3f4948bd2f98391"),
+               name: { first: "Alan", last: "Turing" },
+               birth: new Date('Jun 23, 1912'),
+               death: new Date('Jun 07, 1954'),
+               contribs: [ "Turing machine", "Turing test", "Turingery" ],
+               views : NumberLong(1250000)
+            }
+-"_id" = retine un bson-type ObjectId
+-"_id" este rezervat pentru a fi folosit ca primary key => trebuie sa fie unic in colectia din care face parte documentul => daca nu este dat explicit, Mongo il creeaza
+-"_id" este immutable si nu poate fi de tip array
+-"name" = retine un "embedded document", care are ca "field": "name" si "last"
+-restul sunt self-explanatory
+-daca vrem sa ajungem la "Turingery" din field-ul "contribs" folosim comanda "contribs.2" => Mongo foloseste "dot notation" pentru a accesa values din fields
+-Mongo collections:
+-colectiile sunt analog tabelelor intr-o baza de date relationala, vezi Mongo-col1.png
+-intr-o colectie intra mai multe documente, intr-o baza de date Mongo intra mai multe colectii
+-o colectie poate fi creata explicit cu "createCollection()"
+-MongoDB Atlas
+-Database Access -> adrian, ZbURtGAc1OBAIbYN -> Read and write
+-Network Access -> Allow access from anywhere
+-Clusters -> Connect -> Connect your application => o adresa care reprezinta un MongoDB URI
+-MongoDB URI e practic un connection string...
+mongodb+srv://adrian:ZbURtGAc1OBAIbYN@cluster0.qyqtz.mongodb.net/test?retryWrites=true&w=majority
+...pe care il vom folosi in mongo.js
+.atentie, parola trebuie URL encoded ca sa functioneze, vezi https://docs.atlas.mongodb.com/troubleshoot-connection/#special-characters-in-connection-string-password
+-prin "process.argv[2]" se acceseaza parametrii dati in linie de comanda
+-daca rulam "npm mongo.js ZbURtGAc1OBAIbYN", se va salva un nou "note" in baza de date "test"
+.o putem vedea in Clusters -> Collections
+-am dat drop la "test" pentru ca am inlocuit-o cu "note-app"
+-nu e necesara creearea de baza de date din GUI Mongo pentru ca se creeaza automat cand se insereaza in baza de date
+-se poate accesa baza de date direct din cod JavaScript, dar se prefera modulul "mongoose":
+npm i -g mongoose / npm install mongoose --save
+-Mongoose = object document mapper = practic, salveaza obiecte JavaScript ca documente Mongo
+-Mongoose este un modul care permite foarte usor aceasta salvarea de obiecte JavaScript ca documente Mongo
+
 Schema
 --------------------
+.String is shorthand for {type: String}
+-using a schema, we tell Mongoose how to store the "note" object in the database:
+const noteSchema = new mongoose.Schema({
+	content: String,
+	date: Date,
+	important: Boolean,
+})
+-we require three fields "content", "date" and "important" with String, Date and Boolean as value types
+-cand se creeza modelul, se creaza cu metoda "model()" si o schema data (cea de mai sus)...
+const Note = mongoose.model('Note', noteSchema)
+..."'Note'" reprezinta numele la singular al modelului (Customer, Order, Product, etc.)
+-in aceeasi colectie, Mongo permite salvarea de documente cu perechi field-value diferite pentru ca Mongo este schemaless
+-totusi, prin Mongoose, putem defini o schema (o structura) la nivelul aplicatiei noastre care sa intareasca (reinforce) structura documentelor salvate (in orice colectie de date Mongo)
+
 Creating and saving objects
 --------------------
+-se creeaza un obiect JavaScript folosind modelul "Note" definit mai sus:
+const note = new Note({
+	content: 'HTML is Easy',
+	date: new Date(),
+	important: false,
+})
+-modelului i se mai spune "constructor function" deoarece construiesc obiecte JavaScript folosind argumentele primite ca parametru, "content", "date", etc.
+-deoarece am folosit mai sus metoda "model()" => avem si metoda "save()" cu care putem stoca in baza de date noua "note" creeata
+-la metoda "save()" putem inlantui metoda "then()" cu care putem printa de exemplu in consola:
+note.save().then(result => {
+	console.log('note saved!')
+	mongoose.connection.close()
+})
+-in acest "then()" putem inchide conexiunea catre baza de date
+-este foarte importanta inchiderea conexiunii prin "mongoose.connection.close()"
+-obiectul "result" poate fi printat for debugging purposes
+
 Fetching objects from the database
 --------------------
+-deoarece am folosit mai sus metoda "model()" => avem si metoda "find()" cu care putem aduce toate "notes" din baza de date si le printa pe ecran:
+Note.find({}).then(result => {
+    result.forEach(note => {
+        console.log(note)
+    })
+    mongoose.connection.close()
+})
+-deoarece parametrul lui find() este "{}" => nu s-a impus nicio filtrare asupra rezultatelor => se vor aduce si afisa toate "notes"
+-putem filtra, de exemplu dupa field-ul "important", astfel:
+Note.find({ important: true }).then(result => {..}
+
 Exercise 3.12
 --------------------
+-se continua "Phonebook backend"
 -(?)
+
 Backend connected to a database
 --------------------
+-de data asta am folosit "nodemon index.js ZbURtGAc1OBAIbYN" pentru a porni server-ul pe portul 3001 si pentru a putea lua "notes" din baza de date
+-aplicatia presupune ca exista in toate documentele din colectie un id unic, la noi este reprezentat de field-ul "_id"
+-desi "_id" arata ca un String, este de fapt un Object
+-pentru a formata obiectele returnate de Mongoose, putem modifica metoda "toJSON":
+noteSchema.set('toJSON', {
+	transform: (document, returnedObject) => {
+		returnedObject.id = returnedObject._id.toString()
+		delete returnedObject._id
+		delete returnedObject.__v
+	}
+})
+-se observa ca nu vom mai afisa field-urile "_id" si "__v"
+-se observa ca am folosit explicit "toString()" pe "_id" pentru a ne asigura ca nu vom avea probleme la unit testare
+-se mai observa ca se pot adauga fields on-the-fly, de exemplu, am scos field-ul "_id" si l-am inlocuit cu field-ul "id" (fara "_" in fata)
+-acum, "notes" devine un array de obiecte returnate de Mongo
+-prin metoda "toJSON" din Mongo se apeleaza automat "JSON.stringify"
+
 Database configuration into its own module
 --------------------
+-vom extrage codul pentru modulul Mongoose in fisier separat
+-modul de a defini module Node este diferit de modul de a defini module JavaScript (ES6)
+-interfata exportata prin "module.exports" este singura vizibila in afara fisierului "note.js"
+-interfata va fi modelul "Note" pe care l-am tot folosit pana acum pentru a defini structura in baza de date a unei "note"
+-vom crea environment variable "MONGODB_URI"
+-vom folosi modulul "dotenv", care trebuie sa fie importat inainte de a importa modelul de "note", pentru a stabili variabilele de mediu (environment variables):
+npm install dotenv --save
+-se creeaza un fisier ".env" in folder-ul radacina in care punem String-ul de conexiune si portul
+-importul pentru fisierul ".env" se face in "index.js", nu in modelul de "note":
+require('dotenv').config();
+
 Using database in route handlers
 --------------------
+-pentru a crea un nou "note":
+app.post('/api/notes', (request, response) => {
+    const body = request.body;
+
+    if (body.content === undefined) {
+        return response.status(400).json({
+            error: 'content missing'
+        })
+    }
+
+    const note = new Note({
+        content: body.content,
+        important: body.important || false,
+        date: new Date(),
+    })
+
+    note.save().then(savedNote => {
+        response.json(savedNote)
+    })
+})
+-folosim constructor function "new Note(..)" pentru a crea un obiect nou "const note" care este de tip model Mongo => avem functia save()
+-deoarece am trimis raspunsul ca un callback inauntrul functiei save(), atunci ne-am asigurat ca raspunsul a fost trimis numai dupa ce operatia s-a terminat cu succes
+-"savedNote" este noul "note" creat si salvat in baza de date
+.il vom trimite ca raspuns cu "response.json(savedNote);"
+-acum daca vrem sa cautam dupa un id anume, trebuie sa folosim id-ul din baza de date 
+"api/notes/5f28300c628292059852d4de/", in loc de "api/notes/2"
+-cand se foloseste "dotenv" se prefera folosirea "Preload" daca mergem pe "import" si nu "require", vezi: https://www.npmjs.com/package/dotenv
+
 Verifying frontend and backend integration
 --------------------
+-se recomanda testarea backend cu browser-ul, Postman sau REST Client pentru VSC
+-se recomanda implementarea lui GET => testare backend => testare backend prin frontend
+-se recomanda implementarea altor functionalitati => testare backend => testare backend prin frontend => etc.
+-putem folosi "mongo.js" pentru a verifica faptul ca datele persista in baza de date
+-BUGS:
+-ori aveam o problema cu faptul ca aveam cod pentru conectare la baza de date de doua ori
+-ori era problema in fisierul ".env" ca am pus ' in loc de `
+-ori am pus ; in ".env" fara sa imi dau seama
+-ori nu era interpolat calumea string-ul de conexiune
+-ori am pus ' sau ` in ".env" si trebuia sa pun direct:
+MONGODB_URI=mongodb+srv://adrian:ZbURtGAc1OBAIbYN@cluster0.qyqtz.mongodb.net/note-app?retryWrites=true&w=majority
+
 Exercises 3.13-3.14
 --------------------
+-se continua "Phonebook backend"
+-(?)
+
 Error handling
 --------------------
+-daca se da un "id" invalid => response este "null"
+-de aceea, vom modifica request-ul GET astfel incat sa intoarca un status code 404 daca nu gaseste acel "id" si sa prindem erori cu catch() daca promisiunea returnata de metoda "findById()" are valoarea de "rejected":
+-este important sa incheiem raspunsul cu "end()" sa nu ramana browser-ul in hanging daca nu gaseste acel "id"
+-daca nu se gaseste => 404 NOT FOUND
+-daca apare eroare si promisiunea nu se intoarce cu "fulfilled" => 500 SERVER ERROR
+-cand folosim "send()", Express presupune ca vrei sa trimiti un String => va seta Content-Type la "text/html", spre deosebire de "end()" care doar cheama functia de terminare a raspunsului
+-mai trebuie tratat cazul in care se face un request cu un "id" care nu este formatat corespunzator: "http://localhost:3001/api/notes/2", sau "http://localhost:3001/api/notes/someInvalidId", etc. in loc de "http://localhost:3001/api/notes/5c41c90e84d891c15dfa3431" => 400 BAD REQUEST
+-status code 400 = server-ul nu intelege request-ul pentru ca "malformed syntax"
+-cand se lucreaza cu promisiuni, este o idee buna sa introducem tratare de erori si sa printam in consola eroarea deoarece se poate intra pe ramura de tratarea erorilor din forte multe situatii => este important sa faci logging in consola si sa ai consola mereu deschisa
+
 Moving error handling into middleware
 --------------------
+-error handler-ele, ca middleware, din Express incep cu 4 parametri...
+const errorHandler = (error, request, response, next) => {..}
+...primul dintre care este un parametru de tip Error
+-"Sentry" este un error tracking system care poate fi folosit daca implementam tratarile de erori intr-un singur loc, intr-un singur middleware
+-vom modifica functiile care au blocul catch() astfel incat sa preia eroarea si sa o dea mai departe prin next():
+.catch(error => next(error))
+-deoarece am folosit next(error), vor fi preluate de acel middleware care are ca prim parametru unul de tip Error, exact acel "errorHandler" de mai sus
+.daca next() este apelata fara parametru => executia merge la urmatorul middleware
+.daca next(error) este apelata cu parametru => executia merge la middleware care face tratarea erorilor (error handling)
+-daca vrem sa folosim "next()" in interiorul unei functii, nu uitam sa actualizam antetul acelei functii astfel...
+app.get('/api/notes/:id', (request, response, next) => {
+...adica sa include si pe "next" intre parametri
+
 The order of middleware loading
 --------------------
+-"json-parser" ar trebui sa fie printre primele middleware cu "use()", deoarece:
+.nu am putea folosi middleware de "logging" pentru ca proprietatea "body" a obiectului "request" ar fi goala
+-middleware de "unknown endpoint" ar trebui pus chiar inainte de cel de "error handling":
+.daca "unknown endpoint" ar fi pus inainte de a defini rutele, "api/notes", etc., atunci toate request-urile ar fi tratate ca un "unknown endpoint", deoarece acest "unknown endpoint" raspunde la toate request-urile cu status code 404 => nicio alta ruta sau middleware nu va mai fi apelata in continuare
+.singura exceptie este daca ar aparea o eroare => s-ar executa "error handling" middleware
+
 Other operations
 --------------------
+-pentru a sterge, folosim "findByIdAndRemove()"
+-putem avea cazul in care stergem un "note" care exista (valid) si unul care nu exista => pentru ambele vom folosi status code 204 NO CONTENT:
+app.delete('/api/notes/:id', (request, response, next) => {
+    Note.findByIdAndRemove(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error =>
+            next(error))
+})
+-acel "result" poate fi folosit pentru a verifica faptul ca intr-adevar s-a sters o "note" => ne permite sa verificam daca a fost sters un "note" valid sau invalid => daca s-a sters un "note" invalid => facem tratarea cazului respectiv in mod separat
+-pentru actualizare proprietatii "important", folosim "findByIdAndUpdate()"
+-de data asta folosim PUT in loc de POST:
+app.put('/api/notes/:id', (request, response, next) => {
+    const body = request.body
+
+    const note = {
+        content: body.content,
+        important: body.important,
+    }
+
+    Note.findByIdAndUpdate(request.params.id, note, { new: true })
+        .then(updatedNote => {
+            response.json(updatedNote)
+        })
+        .catch(error => next(error))
+})
+-"findByIdAndUpdate()" primeste ca parametru un obiect JavaScript si nu obiect construit cu function constructor "Note" (ala pe care il foloseam ca model pentru Mongoose)
+-prin "{new: true}", fortam handler-ul sa foloseasca obiectul "note" creat in interiorul functie de update si nu pe cel original
+-prin acest obiect "note" ne referim la parametrul "updatedNote" din then()
+.default, "updatedNote" va fi documentul original, extras din colectie, fara modificari
+.noi ii spunem sa foloseasca acel obiect "note" si nu documentul original
+-pentru a elimina eroarea care spune ca "findByIdAndUpdate" e deprecated, folosim in modelul de "note.js":
+mongoose.set('useFindAndModify', false)
+-BUGS:
+-am comentat route care facea POST atunci cand am facut verbul PUT
+
 Exercises 3.15-3.18
 --------------------
+-se continua "Phonebook backend"
 -(?)
 
 d. Validation and ESLint

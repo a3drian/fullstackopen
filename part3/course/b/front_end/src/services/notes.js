@@ -13,7 +13,7 @@ const Create = (newObject) => {
 }
 
 const Update = (id, newObject) => {
-    const request = axios.put(`${baseURL}/${id}`, newObject);
+    const request = axios.put(`${baseURL}/${id}`, newObject)
     return request.then(response => response.data)
 }
 
@@ -32,10 +32,10 @@ const GetAllFail = () => {
 // GetAll = ce se exporta
 // getAll = cu ce facem legatura cu ce se exporta si proprietate din note.js
 // export default {
-//     GetAll: getAll,
-//     Create: create,
-//     Update: update
+//     getAll: GetAll,
+//     create: Create,
+//     update: Update
 // }
 
 // am redenumit direct functiile cu litera mare
-export default { GetAll, Create, Update, GetAllFail }
+export default { GetAll, Create, Update }
