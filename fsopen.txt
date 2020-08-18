@@ -1,6 +1,76 @@
 
 Full Stack Open
 
+--------------------Part 4, Testing Express servers, user administration--------------------
+
+a. Structure of backend application, introduction to testing
+----------------------------------------
+Project structure
+--------------------
+Exercises 4.1-4.2.
+--------------------
+-se implementeaza ""
+-(?)
+
+Testing Node applications
+--------------------
+Exercises 4.3-4.7.
+--------------------
+
+b. Testing the backend
+----------------------------------------
+Test environment
+--------------------
+supertest
+--------------------
+Initializing the database before tests
+--------------------
+Running tests one by one
+--------------------
+async/await
+--------------------
+async/await in the backend
+--------------------
+More tests and refactoring the backend
+--------------------
+Error handling and async/await
+--------------------
+Eliminating the try-catch
+--------------------
+Optimizing the beforeEach function
+--------------------
+Exercises 4.8-4.12.
+--------------------
+Refactoring tests
+--------------------
+Exercises 4.13-4.14.
+--------------------
+
+c. User administration
+----------------------------------------
+References across collections
+--------------------
+Mongoose schema for users
+--------------------
+Creating users
+--------------------
+Creating a new note
+--------------------
+Populate
+--------------------
+
+d. Token authentication
+----------------------------------------
+Limiting creating new notes to logged in users
+--------------------
+Error handling
+--------------------
+End notes
+--------------------
+Exercises 4.15-4.22.
+--------------------
+
+
 --------------------Part 3, Programming a server with NodeJS and Express--------------------
 
 a. Node.js and Express
@@ -550,7 +620,7 @@ Verifying frontend and backend integration
 -se recomanda implementarea lui GET => testare backend => testare backend prin frontend
 -se recomanda implementarea altor functionalitati => testare backend => testare backend prin frontend => etc.
 -putem folosi "mongo.js" pentru a verifica faptul ca datele persista in baza de date
--BUGS:
+-[BUGS]:
 -ori aveam o problema cu faptul ca aveam cod pentru conectare la baza de date de doua ori
 -ori era problema in fisierul ".env" ca am pus ' in loc de `
 -ori am pus ; in ".env" fara sa imi dau seama
@@ -634,8 +704,10 @@ app.put('/api/notes/:id', (request, response, next) => {
 .noi ii spunem sa foloseasca acel obiect "note" si nu documentul original
 -pentru a elimina eroarea care spune ca "findByIdAndUpdate" e deprecated, folosim in modelul de "note.js":
 mongoose.set('useFindAndModify', false)
--BUGS:
+-[BUGS]:
 -am comentat route care facea POST atunci cand am facut verbul PUT
+.cu alte cuvinte, daca da un 404 cand folosesti un verb s-ar putea sa nu se fi definit ruta respectiva pentru verbul respectiv
+-add DELETE button (?)
 
 Exercises 3.15-3.18
 --------------------
@@ -644,17 +716,103 @@ Exercises 3.15-3.18
 
 d. Validation and ESLint
 ----------------------------------------
+-se poate observa ca fara a face validare pe continutul unui "note" => 400 BAD REQUEST
+-pentru POST, verificam daca "note" contine text, adica sa nu fie un "note" gol cu...
+if (body.content === undefined) {
+	return response.status(400).json({
+		error: 'content missing'
+	})
+}
+...dar se poate face aceeasi verificare folosind "Schema" din Mongoose:
+const noteSchema = new mongoose.Schema({
+    content: {
+        type: String,
+        minlength: 5,
+        required: true
+    },
+    date: {
+        type: Date,
+        required: true
+    },
+    important: Boolean
+})
+-"content" si "date" sunt acum obligatorii, iar "content" trebuie sa aiba o lungime de minim 5 caractere
+-folosind "Schema" din Mongoose putem face verificarea inainte ca datele sa fie salvate in baza de date
+-"minlength" si "required" sunt validators built-in Mongoose, dar se pot defini si altele personalizate daca e nevoie
+-daca incercam sa trimitem un "note" care nu respecta noile constrangeri => exceptie => vom folosi acel "errorHandler" de mai devreme apeland functia next() cu parametrul error
+.de asemenea, trebuie sa actualizam antetul functiei POST sa includa parametrul "next"
+.de asemenea, actualizam "errorHandler" sa trateze erori de tip "ValidationError":
+if (error.name === 'ValidationError') {..}
+
 Promise chaining
 --------------------
+-inainte foloseam metoda "toJSON()" pentru a ne asigura ca datele sunt in formatul corect...
+note.save()
+	.then(savedNote => {
+		response.json(savedNote.toJSON())
+	})
+...dar putem folosi "promise chaining" pentru a obtine aceeasi functionalitate:
+note.save()
+	.then(savedNote => {
+		return savedNote.toJSON()
+	})
+	.then(savedAndFormattedNote => {
+		response.json(savedAndFormattedNote)
+	})
+-primul "then()" primeste pe "savedNote" care este returnat din baza de date de Mongoose si este formatat folosind "toJSON()"
+-deoarece primul "then()" returneaza o promisiune, putem accesa acel "savedNote" care a fost deja formatat prin parametrul "savedAndFormattedNote"
+.pentru ca "then()" a unei promisiuni returneaza tot o promisiune
+-daca folosim sintaxa scurta, codul devine:
+note.save()
+	.then(savedNote => savedNote.toJSON())
+	.then(savedAndFormattedNote => {
+		response.json(savedAndFormattedNote)
+	})
+-"promise chaining" este extrem de folositor in cazul in care avem nevoie de mai multe operatii asincrone pe care le avem de executat in ordine, cum e mai sus: mai intai formatam datele din baza de date in primul "then()" si apoi le trimitem ca raspuns in al doilea "then()"
+
 Deploying the database backend to production
 --------------------
+-folosim comanda...
+heroku config:set MONGODB_URI=mongodb+srv://adrian:ZbURtGAc1OBAIbYN@cluster0.qyqtz.mongodb.net/note-app?retryWrites=true&w=majority
+...vom defini pentru folosirea ei in "production mode"
+.pana acum, MONGODB_URI era un environment variable folosit doar in "development mode"
+-daca nu merge comanda, merge pus String-ul de conexiune intre ''
+
 Exercises 3.19-3.21
 --------------------
+-se continua "Phonebook backend"
 -(?)
+
 Lint
 --------------------
+-se instaleaza pachetul ESlint cu...
+npm install eslint --save-dev
+...si se initializeaza fisierul de configurare ".eslintrc.js" cu:
+eslint --init
+.e posibil sa trebuiasca sa navigam in folder-ul "node_modules/.bin" si de acolo sa rulam comanda "eslint --lint", vezi lint-1.png
+-tot in "node_modules/.bin" se va regasi si fisierul de configurare ".eslintrc.js"
+-"linting" = analiza statica a codului = poate verifica inclusiv reguli de stil, '' in loc de "" pentru String-uri, folosirea de Tab in loc de Space pentru indentation, etc.
+-daca se adauga...
+"lint": "eslint ."
+...sub "scripts" in package.json, atunci putem rula comanda "npm run lint" pentru a verifica toate fisierele din intregul proiect
+-lint are si el un "gitignore", numit ".eslintignore"
+-punem acolo "build" pentru ca nu vrem sa se aplice regulile de lint in folder-ul de "build"
+.am adaugat de asemenea folder-ul "front_end" pentru a evita conflictul cu package.json din frontend
+-in linia "eslint:recommended" inseamna ca fisierul nostru de configurare vine preincarcat cu anumite reguli, pe care le putem suprascrie
+-de exemplu, vom suprascrie...
+'no-console': 0
+...pentru a nu mai afisa avertismente legate de comenzile "console.log()"
+-cu 'eqeqeq': 'error' se verifica daca facem comparatii de egalitate strict cu "==="
+-daca aduci modificari asupra ".eslintrc.js", e mai bine sa il testezi cu "npm run lint" pentru a verifica daca este formatat corect ca fisier JSON
+-se poate folosi VS Code ESlint plugin (?)
+npm i eslint -g
+
+ex_d:
+-in Delete(), promisiunea nu mai intoarce nimic de la server
+
 Exercise 3.22
 --------------------
+-se continua "Phonebook backend"
 -(?)
 
 --------------------Part 2, Communicating with server--------------------
